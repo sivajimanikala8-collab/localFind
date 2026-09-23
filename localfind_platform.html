@@ -1,0 +1,3022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LocalFind — Find trusted services near you</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#082f49',
+              primary: '#0f172a',
+              accent: '#0d9488',
+              gold: '#f59e0b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom utility animations and scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .hero-mesh {
+      background-color: #0f172a;
+      background-image: 
+        radial-gradient(at 10% 10%, rgba(13, 148, 136, 0.25) 0px, transparent 50%),
+        radial-gradient(at 90% 20%, rgba(59, 130, 246, 0.2) 0px, transparent 50%),
+        radial-gradient(at 50% 90%, rgba(245, 158, 11, 0.15) 0px, transparent 60%);
+    }
+    .badge-glow {
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.35);
+    }
+    .map-grid-bg {
+      background-size: 28px 28px;
+      background-image: 
+        linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans flex flex-col min-h-screen selection:bg-teal-500 selection:text-white">
+
+  <!-- Top Global Toast Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- STICKY NAVBAR -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20">
+        <!-- Logo -->
+        <div class="flex items-center gap-8">
+          <a href="#" onclick="showView('home'); return false;" class="flex items-center gap-2.5 group">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-primary via-teal-700 to-teal-500 flex items-center justify-center text-white shadow-md shadow-teal-900/10 group-hover:scale-105 transition-transform">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-2xl font-extrabold tracking-tight text-slate-900">Local<span class="text-teal-600">Find</span></span>
+                <span class="text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full border border-amber-300">PRO</span>
+              </div>
+              <p class="text-[10px] text-slate-400 font-medium tracking-wide -mt-1 hidden sm:block">Find trusted services near you</p>
+            </div>
+          </a>
+
+          <!-- Location Selector Trigger -->
+          <div class="relative hidden md:block">
+            <button onclick="toggleLocationDropdown()" id="nav-location-btn" class="flex items-center gap-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200/80 px-3.5 py-2 rounded-full border border-slate-200 transition-colors">
+              <span class="text-teal-600">📍</span>
+              <span id="nav-current-location">Visakhapatnam</span>
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            <div id="location-dropdown" class="hidden absolute left-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl p-2 z-50 animate-in fade-in slide-in-from-top-2">
+              <div class="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">Select Your City</div>
+              <div class="space-y-1" id="location-options-list">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center Nav Links -->
+        <nav class="hidden lg:flex items-center gap-7">
+          <a href="#" onclick="showView('home'); return false;" class="text-sm font-semibold text-slate-600 hover:text-teal-600 transition-colors nav-link active" data-nav="home">Home</a>
+          <a href="#" onclick="showView('explore'); return false;" class="text-sm font-semibold text-slate-600 hover:text-teal-600 transition-colors nav-link" data-nav="explore">Explore</a>
+          <a href="#" onclick="showView('categories'); return false;" class="text-sm font-semibold text-slate-600 hover:text-teal-600 transition-colors nav-link" data-nav="categories">Categories</a>
+          <a href="#" onclick="showView('list-business'); return false;" class="text-sm font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1.5 transition-colors nav-link" data-nav="list-business">
+            <span>List Your Business</span>
+            <span class="px-1.5 py-0.2 text-[10px] bg-amber-500/10 text-amber-700 rounded-md font-bold">Featured</span>
+          </a>
+          <a href="#" onclick="showView('admin'); return false;" class="text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors nav-link flex items-center gap-1" data-nav="admin">
+            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            Admin
+          </a>
+        </nav>
+
+        <!-- Right User Actions -->
+        <div class="flex items-center gap-3">
+          <button onclick="openAuthModal('login')" id="login-btn-top" class="text-sm font-semibold text-slate-700 hover:text-slate-900 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors">
+            Log in
+          </button>
+          <button onclick="openAuthModal('signup')" id="signup-btn-top" class="text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 px-4 py-2.5 rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-1.5">
+            <span>Sign Up</span>
+          </button>
+          <!-- User Profile Dropdown (Hidden initially) -->
+          <div id="logged-user-bar" class="hidden items-center gap-2">
+            <span class="w-9 h-9 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center text-sm shadow" id="user-avatar-initials">JD</span>
+            <button onclick="logoutUser()" class="text-xs text-rose-600 hover:underline font-medium">Logout</button>
+          </div>
+
+          <!-- Mobile Hamburger -->
+          <button onclick="toggleMobileMenu()" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Nav Drawer -->
+    <div id="mobile-menu" class="hidden lg:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-3">
+      <div class="py-2 border-b border-slate-100 flex items-center justify-between">
+        <span class="text-xs text-slate-500 font-medium">Location:</span>
+        <select onchange="changeCurrentLocation(this.value)" class="text-xs font-semibold text-slate-800 bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1.5" id="mobile-location-select">
+          <!-- Populated via JS -->
+        </select>
+      </div>
+      <a href="#" onclick="showView('home'); toggleMobileMenu(); return false;" class="block text-sm font-semibold text-slate-700 py-1.5">Home</a>
+      <a href="#" onclick="showView('explore'); toggleMobileMenu(); return false;" class="block text-sm font-semibold text-slate-700 py-1.5">Explore Directory</a>
+      <a href="#" onclick="showView('categories'); toggleMobileMenu(); return false;" class="block text-sm font-semibold text-slate-700 py-1.5">Popular Categories</a>
+      <a href="#" onclick="showView('list-business'); toggleMobileMenu(); return false;" class="block text-sm font-semibold text-amber-600 py-1.5">List Your Business (₹499/mo)</a>
+      <a href="#" onclick="showView('admin'); toggleMobileMenu(); return false;" class="block text-sm font-semibold text-slate-600 py-1.5">Admin Dashboard</a>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-grow">
+
+    <!-- ==================== VIEW 1: HOME ==================== -->
+    <section id="view-home" class="page-view space-y-16 pb-20">
+      <!-- HERO SECTION -->
+      <div class="relative hero-mesh text-white pt-20 pb-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <!-- Floating ambient decoration -->
+        <div class="absolute top-1/4 left-10 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute bottom-10 right-10 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-teal-300 text-xs font-semibold mb-6 shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+            Verified Local Pros Across South India
+          </div>
+
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
+            Find the best local services <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 via-emerald-200 to-amber-300">near you.</span>
+          </h1>
+          <p class="mt-4 text-base sm:text-lg text-slate-300 max-w-2xl mx-auto font-normal">
+            Discover trusted businesses, compare ratings, and connect with local professionals in your city or neighborhood.
+          </p>
+
+          <!-- COMPREHENSIVE DUAL SEARCH BAR -->
+          <div class="mt-8 max-w-3xl mx-auto bg-white rounded-3xl sm:rounded-full p-2.5 sm:p-2 shadow-2xl shadow-black/40 border border-white/20">
+            <form onsubmit="handleHeroSearch(event)" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <!-- Keyword input -->
+              <div class="flex-1 flex items-center gap-2.5 px-4 py-2 border-b sm:border-b-0 sm:border-r border-slate-100">
+                <svg class="w-5 h-5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="hero-query" placeholder="What are you looking for? (e.g. Plumber, Cafe)" class="w-full text-slate-800 placeholder:text-slate-400 text-sm font-medium focus:outline-none bg-transparent">
+              </div>
+
+              <!-- Location / Neighborhood input -->
+              <div class="flex-1 flex items-center gap-2.5 px-4 py-2">
+                <svg class="w-5 h-5 text-teal-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                <input type="text" id="hero-location" placeholder="Area or neighborhood (e.g. MVP Colony)" class="w-full text-slate-800 placeholder:text-slate-400 text-sm font-medium focus:outline-none bg-transparent">
+              </div>
+
+              <!-- Submit Button -->
+              <button type="submit" class="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 text-white font-semibold text-sm px-7 py-3.5 rounded-2xl sm:rounded-full transition-all shadow-md hover:shadow-teal-600/30 flex items-center justify-center gap-2">
+                <span>Search</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+              </button>
+            </form>
+          </div>
+
+          <!-- POPULAR QUICK PILLS -->
+          <div class="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs font-medium text-slate-300">
+            <span class="text-slate-400">Popular:</span>
+            <button onclick="quickSearchTag('Cafes')" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-colors">Cafes</button>
+            <button onclick="quickSearchTag('Plumbers')" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-colors">Plumbers</button>
+            <button onclick="quickSearchTag('Salons')" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-colors">Salons</button>
+            <button onclick="quickSearchTag('Mechanics')" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-colors">Mechanics</button>
+            <button onclick="quickSearchTag('Tutors')" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-colors">Tutors</button>
+            <button onclick="quickSearchTag('Electricians')" class="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 transition-colors">Electricians</button>
+          </div>
+        </div>
+
+        <!-- Trust Stats Ribbon -->
+        <div class="max-w-5xl mx-auto mt-14 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+            <div class="text-2xl font-bold text-white">12,400+</div>
+            <div class="text-xs text-slate-300 mt-1">Verified Local Pros</div>
+          </div>
+          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+            <div class="text-2xl font-bold text-amber-300">4.9 / 5.0</div>
+            <div class="text-xs text-slate-300 mt-1">Average Review Rating</div>
+          </div>
+          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+            <div class="text-2xl font-bold text-white">100%</div>
+            <div class="text-xs text-slate-300 mt-1">Authentic Community Reviews</div>
+          </div>
+          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+            <div class="text-2xl font-bold text-teal-300">&lt; 15 mins</div>
+            <div class="text-xs text-slate-300 mt-1">Avg. Contact Response</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+          <div>
+            <span class="text-xs font-bold text-teal-600 uppercase tracking-wider">Browse by Specialty</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">Popular Categories</h2>
+            <p class="text-sm text-slate-500 mt-1">Find vetted experts across everyday home, personal, and repair services</p>
+          </div>
+          <button onclick="showView('categories')" class="text-sm font-semibold text-teal-700 hover:text-teal-800 flex items-center gap-1 group">
+            View all 10 categories
+            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4" id="home-categories-grid">
+          <!-- Populated by renderCategoriesGrid() -->
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gradient-to-r from-amber-50/70 via-slate-50 to-amber-50/40 rounded-3xl p-6 sm:p-8 border border-amber-200/70">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-800 text-xs font-bold mb-1">
+                <span class="text-amber-500">★</span> Featured Near You
+              </div>
+              <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Businesses featured by LocalFind</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Top-performing local partners verified for customer satisfaction & speedy replies</p>
+            </div>
+            <a href="#" onclick="filterExploreBy('featured'); return false;" class="text-xs font-bold text-amber-800 bg-amber-100/90 hover:bg-amber-200 px-4 py-2 rounded-xl transition-colors">
+              Explore All Featured &rarr;
+            </a>
+          </div>
+
+          <!-- Featured Cards Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="home-featured-grid">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <span class="text-xs font-bold text-teal-600 uppercase tracking-wider">Customer Favorites</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">Top Rated Near You</h2>
+            <p class="text-sm text-slate-500 mt-1">Highest scored providers boasting 4.5+ star verified ratings</p>
+          </div>
+          <button onclick="filterExploreBy('top-rated')" class="text-sm font-semibold text-slate-600 hover:text-slate-900">
+            See more &rarr;
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="home-toprated-grid">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <span class="text-xs font-bold text-teal-600 uppercase tracking-wider">Neighborhoods & Hubs</span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">Explore services by area</h2>
+          <p class="text-sm text-slate-500 mt-1">Direct access to local pros in your neighborhood</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="home-locations-grid">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 shadow-sm">
+          <div class="text-center max-w-xl mx-auto mb-12">
+            <span class="text-xs font-bold text-teal-600 uppercase tracking-wider">Seamless Experience</span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">How LocalFind Works</h2>
+            <p class="text-sm text-slate-500 mt-2">Connecting residents with honest local businesses in three quick steps</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            <!-- Step 1 -->
+            <div class="flex flex-col items-center text-center p-4">
+              <div class="w-16 h-16 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center font-black text-xl mb-5 shadow-sm border border-teal-100">
+                1
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">1. Search</h3>
+              <p class="text-sm text-slate-500 mt-2 leading-relaxed">
+                Find the exact service you need by typing keywords or picking a category in your specific city or neighborhood.
+              </p>
+            </div>
+            <!-- Step 2 -->
+            <div class="flex flex-col items-center text-center p-4">
+              <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-black text-xl mb-5 shadow-sm border border-amber-100">
+                2
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">2. Compare</h3>
+              <p class="text-sm text-slate-500 mt-2 leading-relaxed">
+                Compare ratings, authentic community reviews, transparent pricing indicators, and verified credentials.
+              </p>
+            </div>
+            <!-- Step 3 -->
+            <div class="flex flex-col items-center text-center p-4">
+              <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-xl mb-5 shadow-sm border border-blue-100">
+                3
+              </div>
+              <h3 class="text-lg font-bold text-slate-900">3. Connect</h3>
+              <p class="text-sm text-slate-500 mt-2 leading-relaxed">
+                Call immediately, start a WhatsApp consultation, or get mapped directions directly with zero middleman fees.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-brand-primary to-teal-950 text-white p-8 sm:p-12 lg:p-16 shadow-xl">
+          <div class="absolute -right-10 -bottom-10 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl pointer-events-none"></div>
+          <div class="relative z-10 max-w-2xl">
+            <span class="inline-block px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-bold tracking-wide uppercase mb-4 border border-teal-500/30">
+              For Local Business Owners
+            </span>
+            <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Own a local business?</h2>
+            <p class="mt-3 text-lg text-slate-300">
+              Get discovered by thousands of ready-to-hire customers in your city. Boost your revenue with featured ranking starting at just <span class="text-amber-400 font-bold" id="cta-featured-price-text">₹499/month</span>.
+            </p>
+
+            <div class="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-200">
+              <div class="flex items-center gap-2">
+                <span class="text-teal-400">✓</span> Priority placement
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-teal-400">✓</span> Verified badge
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-teal-400">✓</span> WhatsApp lead clicks
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-teal-400">✓</span> Rich photo gallery
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-teal-400">✓</span> Analytics dashboard
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-teal-400">✓</span> Direct phone bookings
+              </div>
+            </div>
+
+            <div class="mt-8 flex flex-wrap items-center gap-4">
+              <button onclick="showView('list-business')" class="px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-900 font-bold text-sm shadow-lg shadow-amber-500/20 transition-all">
+                List Your Business Now
+              </button>
+              <button onclick="showPricingPlansModal()" class="px-5 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-sm transition-all">
+                Compare Plans
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 2: EXPLORE / DIRECTORY ==================== -->
+    <section id="view-explore" class="page-view hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+      <!-- Breadcrumb & Title -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 text-xs text-slate-400 mb-1">
+            <a href="#" onclick="showView('home'); return false;" class="hover:text-teal-600">Home</a>
+            <span>/</span>
+            <span class="text-slate-700 font-semibold">Explore Services</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Explore Local Businesses</h1>
+        </div>
+
+        <!-- View switcher: List vs Map toggle -->
+        <div class="flex items-center bg-slate-200/80 p-1 rounded-xl self-start sm:self-auto">
+          <button id="btn-view-split" onclick="setExploreDisplayMode('split')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm">Split View</button>
+          <button id="btn-view-grid" onclick="setExploreDisplayMode('grid')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all">List Only</button>
+        </div>
+      </div>
+
+      <!-- Top Search & Quick Bar -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-center">
+        <div class="relative flex-1 w-full">
+          <svg class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" id="explore-search-input" oninput="applyFilters()" placeholder="Search by business name, service keyword, or neighborhood..." class="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600">
+        </div>
+
+        <!-- City filter -->
+        <div class="w-full md:w-48">
+          <select id="filter-city" onchange="applyFilters()" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 focus:outline-none focus:border-teal-600">
+            <option value="ALL">All Locations</option>
+            <!-- Injected via JS -->
+          </select>
+        </div>
+
+        <!-- Category filter -->
+        <div class="w-full md:w-48">
+          <select id="filter-category" onchange="applyFilters()" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 focus:outline-none focus:border-teal-600">
+            <option value="ALL">All Categories</option>
+            <!-- Injected via JS -->
+          </select>
+        </div>
+
+        <!-- Sort selector -->
+        <div class="w-full md:w-44">
+          <select id="filter-sort" onchange="applyFilters()" class="w-full px-3 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-700 focus:outline-none focus:border-teal-600">
+            <option value="rating">Highest Rated</option>
+            <option value="reviews">Most Reviews</option>
+            <option value="distance">Nearest Distance</option>
+            <option value="name">Alphabetical (A-Z)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Filter Badges Toggle Row -->
+      <div class="flex flex-wrap items-center gap-2 text-xs font-semibold">
+        <span class="text-slate-400 mr-1">Quick Filters:</span>
+        <button id="toggle-open-now" onclick="toggleBooleanFilter('openNow')" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-all flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          Open Now
+        </button>
+        <button id="toggle-verified" onclick="toggleBooleanFilter('verifiedOnly')" class="px-3 py-1.5 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-all flex items-center gap-1.5">
+          <span class="text-teal-600">✓</span>
+          Verified Only
+        </button>
+        <button id="toggle-featured-first" onclick="toggleBooleanFilter('featuredFirst')" class="px-3 py-1.5 rounded-full border border-amber-300 bg-amber-50 text-amber-900 transition-all flex items-center gap-1.5">
+          <span>★</span>
+          Featured First
+        </button>
+
+        <div class="h-4 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+
+        <!-- Price indicators -->
+        <span class="text-slate-400 hidden sm:inline">Price:</span>
+        <button onclick="setPriceFilter('ALL')" id="price-btn-all" class="px-2.5 py-1 rounded-md bg-slate-900 text-white font-bold text-xs">All</button>
+        <button onclick="setPriceFilter('₹')" id="price-btn-1" class="px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-bold text-xs">₹</button>
+        <button onclick="setPriceFilter('₹₹')" id="price-btn-2" class="px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-bold text-xs">₹₹</button>
+        <button onclick="setPriceFilter('₹₹₹')" id="price-btn-3" class="px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-bold text-xs">₹₹₹</button>
+
+        <!-- Reset Button -->
+        <button onclick="resetAllFilters()" class="ml-auto text-xs text-rose-600 hover:text-rose-700 font-semibold">Clear Filters</button>
+      </div>
+
+      <!-- MAIN SPLIT / GRID VIEW CONTENT -->
+      <div id="explore-layout-wrapper" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Results Column (8 cols in split, 12 cols in list) -->
+        <div id="results-column" class="lg:col-span-7 space-y-4">
+          <div class="flex items-center justify-between text-xs text-slate-500 font-medium px-1">
+            <span id="results-count-text">Showing 8 businesses</span>
+            <span class="text-teal-700 font-semibold" id="active-location-summary">Location: All</span>
+          </div>
+
+          <!-- Cards List -->
+          <div id="explore-cards-container" class="space-y-4">
+            <!-- Populated via renderDirectoryListings() -->
+          </div>
+
+          <!-- Empty State Container -->
+          <div id="explore-empty-state" class="hidden bg-white rounded-3xl p-12 text-center border border-dashed border-slate-300">
+            <div class="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-4 text-2xl">
+              🔍
+            </div>
+            <h3 class="text-lg font-bold text-slate-900">No businesses match your filters</h3>
+            <p class="text-sm text-slate-500 mt-1 max-w-sm mx-auto">Try broadening your search term, switching city to 'All Locations', or resetting the price and rating filters.</p>
+            <button onclick="resetAllFilters()" class="mt-5 px-4 py-2 text-xs font-bold text-teal-700 bg-teal-50 border border-teal-200 rounded-xl hover:bg-teal-100">Reset All Filters</button>
+          </div>
+        </div>
+
+        <!-- Interactive Map Preview Column (5 cols) -->
+        <div id="map-column" class="hidden lg:block lg:col-span-5">
+          <div class="sticky top-28 bg-slate-100 border border-slate-200 rounded-3xl overflow-hidden shadow-sm h-[680px] flex flex-col">
+            <!-- Simulated Map Canvas / UI -->
+            <div class="p-3 bg-white border-b border-slate-200 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-xs font-bold text-slate-800">Live Neighborhood Map</span>
+              </div>
+              <span class="text-[11px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">Interactive Pins</span>
+            </div>
+
+            <!-- Map Viewport -->
+            <div class="relative flex-1 map-grid-bg p-4 flex items-center justify-center overflow-hidden" id="simulated-map-viewport">
+              <div class="absolute inset-0 pointer-events-none opacity-40 bg-gradient-to-b from-transparent via-slate-200/20 to-teal-900/10"></div>
+              
+              <!-- Road network decorative SVG -->
+              <svg class="absolute inset-0 w-full h-full opacity-25 stroke-slate-400" fill="none" stroke-width="2">
+                <path d="M-20,100 Q150,80 300,160 T600,120" />
+                <path d="M50,-20 Q120,200 240,350 T400,700" />
+                <path d="M300,-10 Q320,150 180,450 T500,600" />
+                <circle cx="280" cy="220" r="70" stroke-dasharray="4 4" />
+                <circle cx="150" cy="380" r="50" stroke-dasharray="3 3" />
+              </svg>
+
+              <!-- Dynamic Map Pins Container -->
+              <div id="map-pins-container" class="relative w-full h-full">
+                <!-- Injected via renderMapPins() -->
+              </div>
+
+              <!-- Interactive Pin Hover Preview Box -->
+              <div id="map-pin-preview" class="hidden absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl p-3 border border-slate-200 shadow-xl transition-all z-30">
+                <!-- Preview injected on hover -->
+              </div>
+            </div>
+
+            <!-- Map Footer Controls -->
+            <div class="p-3 bg-white border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+              <span>Showing geolocations for current filters</span>
+              <button onclick="showToast('Map refreshed with GPS telemetry!')" class="text-teal-600 font-bold hover:underline text-[11px]">Recenter</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 3: BUSINESS DETAILS ==================== -->
+    <section id="view-details" class="page-view hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <!-- Back button -->
+      <button onclick="navigateBackFromDetails()" class="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-teal-700 bg-white border border-slate-200 px-3.5 py-2 rounded-xl transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Back to Listings
+      </button>
+
+      <!-- Details Content Injected Dynamically -->
+      <div id="business-details-container">
+        <!-- Rendered by renderBusinessDetails() -->
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 4: POPULAR CATEGORIES ==================== -->
+    <section id="view-categories" class="page-view hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <div class="max-w-2xl">
+        <span class="text-xs font-bold text-teal-600 uppercase tracking-wider">All Industry Verticals</span>
+        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mt-1">Explore by Category</h1>
+        <p class="text-sm text-slate-500 mt-2">Discover curated pros categorized by service requirements with transparent reviews and direct contacts.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="all-categories-full-grid">
+        <!-- Populated via renderAllCategoriesFullGrid() -->
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 5: LIST YOUR BUSINESS ==================== -->
+    <section id="view-list-business" class="page-view hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+      <!-- Header -->
+      <div class="text-center max-w-3xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-50 text-teal-700 text-xs font-bold border border-teal-200 mb-3">
+          <span>🚀 Grow Your Local Customer Base</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">Register Your Business on LocalFind</h1>
+        <p class="text-slate-500 text-sm sm:text-base mt-2">Join thousands of local businesses getting verified inquiries, calls, and WhatsApp messages every day.</p>
+      </div>
+
+      <!-- PRICING TIERS SELECTION -->
+      <div class="space-y-4">
+        <div class="text-center">
+          <h2 class="text-xl font-bold text-slate-900">1. Select Your Visibility Tier</h2>
+          <p class="text-xs text-slate-500">You can adjust or upgrade your tier anytime</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto" id="pricing-plans-container">
+          <!-- FREE TIER -->
+          <div class="pricing-card bg-white rounded-3xl border-2 border-slate-200 p-6 sm:p-8 flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer relative" onclick="selectListingPlan('FREE')">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Basic</span>
+                <span class="plan-selected-badge hidden text-xs font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200">Selected</span>
+              </div>
+              <h3 class="text-xl font-bold text-slate-900">Free Listing</h3>
+              <p class="text-xs text-slate-500 mt-1">Standard business presence</p>
+              <div class="mt-4 flex items-baseline">
+                <span class="text-3xl font-extrabold text-slate-900">₹0</span>
+                <span class="text-xs text-slate-400 ml-1">/ forever</span>
+              </div>
+              <ul class="mt-6 space-y-3 text-xs text-slate-600">
+                <li class="flex items-center gap-2"><span class="text-teal-600">✓</span> Standard directory listing</li>
+                <li class="flex items-center gap-2"><span class="text-teal-600">✓</span> Basic business profile</li>
+                <li class="flex items-center gap-2"><span class="text-teal-600">✓</span> Phone & WhatsApp contact</li>
+                <li class="flex items-center gap-2 text-slate-400"><span class="text-slate-300">✕</span> Priority search ranking</li>
+                <li class="flex items-center gap-2 text-slate-400"><span class="text-slate-300">✕</span> Featured badge</li>
+              </ul>
+            </div>
+            <button type="button" class="mt-8 w-full py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">Select Free</button>
+          </div>
+
+          <!-- FEATURED TIER (POPULAR) -->
+          <div class="pricing-card bg-white rounded-3xl border-2 border-amber-400 p-6 sm:p-8 flex flex-col justify-between shadow-xl shadow-amber-500/10 transition-all cursor-pointer relative ring-2 ring-amber-400/20" onclick="selectListingPlan('FEATURED')">
+            <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-extrabold text-[11px] px-3.5 py-1 rounded-full uppercase tracking-wider shadow">
+              Most Popular
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-4 mt-2">
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-600">Featured Pro</span>
+                <span class="plan-selected-badge text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">Active Choice</span>
+              </div>
+              <h3 class="text-xl font-bold text-slate-900">Featured Plan</h3>
+              <p class="text-xs text-slate-500 mt-1">High conversion & top visibility</p>
+              <div class="mt-4 flex items-baseline">
+                <span class="text-3xl font-extrabold text-slate-900" id="plan-featured-price">₹499</span>
+                <span class="text-xs text-slate-400 ml-1">/ month</span>
+              </div>
+              <ul class="mt-6 space-y-3 text-xs text-slate-700">
+                <li class="flex items-center gap-2 font-semibold"><span class="text-amber-500">★</span> Priority top ranking</li>
+                <li class="flex items-center gap-2"><span class="text-amber-500">✓</span> Golden Featured Badge</li>
+                <li class="flex items-center gap-2"><span class="text-amber-500">✓</span> Home page showcase exposure</li>
+                <li class="flex items-center gap-2"><span class="text-amber-500">✓</span> Verified shield badge</li>
+                <li class="flex items-center gap-2"><span class="text-amber-500">✓</span> Lead & inquiry analytics</li>
+              </ul>
+            </div>
+            <button type="button" class="mt-8 w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-bold text-xs shadow-md">Select Featured</button>
+          </div>
+
+          <!-- PREMIUM TIER -->
+          <div class="pricing-card bg-white rounded-3xl border-2 border-slate-200 p-6 sm:p-8 flex flex-col justify-between hover:border-slate-300 transition-all cursor-pointer relative" onclick="selectListingPlan('PREMIUM')">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-indigo-500">Enterprise</span>
+                <span class="plan-selected-badge hidden text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">Selected</span>
+              </div>
+              <h3 class="text-xl font-bold text-slate-900">Premium Pro</h3>
+              <p class="text-xs text-slate-500 mt-1">Maximum domination in city</p>
+              <div class="mt-4 flex items-baseline">
+                <span class="text-3xl font-extrabold text-slate-900" id="plan-premium-price">₹999</span>
+                <span class="text-xs text-slate-400 ml-1">/ month</span>
+              </div>
+              <ul class="mt-6 space-y-3 text-xs text-slate-600">
+                <li class="flex items-center gap-2 font-semibold text-indigo-900"><span class="text-indigo-600">★</span> 1st Position Guarantee</li>
+                <li class="flex items-center gap-2"><span class="text-indigo-600">✓</span> Dedicated Account Manager</li>
+                <li class="flex items-center gap-2"><span class="text-indigo-600">✓</span> Verified Shield + Premium Ribbon</li>
+                <li class="flex items-center gap-2"><span class="text-indigo-600">✓</span> Promotional section banner</li>
+                <li class="flex items-center gap-2"><span class="text-indigo-600">✓</span> Real-time call tracking stats</li>
+              </ul>
+            </div>
+            <button type="button" class="mt-8 w-full py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50">Select Premium</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ONBOARDING FORM & LIVE PREVIEW GRID -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-6xl mx-auto">
+        <!-- Form (7 cols) -->
+        <div class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+          <h2 class="text-xl font-bold text-slate-900 mb-2">2. Business Profile Information</h2>
+          <p class="text-xs text-slate-500 mb-6">Complete all fields accurately. Once submitted, your profile will immediately activate in the directory.</p>
+
+          <form onsubmit="handleBusinessRegistration(event)" class="space-y-5" id="business-reg-form">
+            <!-- Business Name & Owner Name -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Business Name *</label>
+                <input type="text" id="reg-name" required oninput="updateLiveCardPreview()" placeholder="e.g. Bay Breeze Cafe & Bakery" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Owner / Manager Name *</label>
+                <input type="text" id="reg-owner" required placeholder="e.g. Ramesh Varma" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+            </div>
+
+            <!-- Category & Price Tier -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Category *</label>
+                <select id="reg-category" onchange="updateLiveCardPreview()" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600 font-medium">
+                  <!-- Injected via JS -->
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Price Range *</label>
+                <select id="reg-price" onchange="updateLiveCardPreview()" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600 font-medium">
+                  <option value="₹">₹ - Budget Friendly</option>
+                  <option value="₹₹" selected>₹₹ - Moderate / Standard</option>
+                  <option value="₹₹₹">₹₹₹ - Premium / Luxury</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Contact numbers -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number (Calling) *</label>
+                <input type="tel" id="reg-phone" required placeholder="+91 98480 12345" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp Number *</label>
+                <input type="tel" id="reg-whatsapp" required placeholder="+91 98480 12345" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+            </div>
+
+            <!-- Email & Website -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Business Email *</label>
+                <input type="email" id="reg-email" required placeholder="contact@baybreeze.in" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Website URL (Optional)</label>
+                <input type="url" id="reg-website" placeholder="https://example.com" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+            </div>
+
+            <!-- Location details -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">City *</label>
+                <select id="reg-city" onchange="updateLiveCardPreview()" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600 font-medium">
+                  <!-- Injected via JS -->
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Neighborhood / Area *</label>
+                <input type="text" id="reg-neighborhood" oninput="updateLiveCardPreview()" required placeholder="e.g. Beach Road, Lawson's Bay" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Full Street Address *</label>
+              <input type="text" id="reg-address" required placeholder="Shop #4, Sea View Avenue, Near Park" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+            </div>
+
+            <!-- Business Description -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Short Description (Max 200 chars) *</label>
+              <textarea id="reg-desc" oninput="updateLiveCardPreview()" required rows="2" maxlength="200" placeholder="Artisanal specialty coffee, fresh sourdough croissants, and ocean breeze views..." class="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600"></textarea>
+            </div>
+
+            <!-- Services Offered & Opening Hours -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Services List (Comma separated) *</label>
+                <input type="text" id="reg-services" required placeholder="Espresso, Brunch, Free Wi-Fi, Outdoor Seating" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Opening Hours *</label>
+                <input type="text" id="reg-hours" required placeholder="8:00 AM - 10:30 PM (Daily)" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+              </div>
+            </div>
+
+            <!-- Image URL -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Cover Photo Image URL *</label>
+              <input type="url" id="reg-image" oninput="updateLiveCardPreview()" required value="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&auto=format&fit=crop&q=80" placeholder="https://..." class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-teal-600">
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+              <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-500 hover:to-teal-600 text-white font-bold text-sm rounded-2xl shadow-lg shadow-teal-700/20 transition-all flex items-center justify-center gap-2">
+                <span>Submit & Publish Listing</span>
+                <span id="submit-plan-name-indicator" class="text-xs bg-white/20 px-2 py-0.5 rounded-full font-medium">FEATURED (₹499)</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Live Preview Sticky (5 cols) -->
+        <div class="lg:col-span-5">
+          <div class="sticky top-28 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Live Listing Preview</span>
+              <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">Real-time simulator</span>
+            </div>
+
+            <div id="live-preview-card" class="bg-white rounded-2xl border border-slate-200 p-4 shadow-md space-y-3">
+              <!-- Preview rendered via updateLiveCardPreview() -->
+            </div>
+
+            <div class="bg-amber-50 rounded-2xl p-4 border border-amber-200/80 text-xs text-amber-900 space-y-1">
+              <div class="font-bold flex items-center gap-1.5">
+                <span>💡</span> Instant Directory Activation
+              </div>
+              <p class="text-amber-800/80 leading-relaxed">
+                After submission, your new listing will be saved directly to the database and will instantly appear under the Home and Explore tabs!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== VIEW 6: ADMIN DASHBOARD ==================== -->
+    <section id="view-admin" class="page-view hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <!-- Admin Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-6">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Administration Console</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight mt-1">Platform Operations & Metrics</h1>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="openSchemaModal()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 flex items-center gap-1.5 transition-colors">
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+            Database Relational Schema
+          </button>
+          <button onclick="resetDataToDemoDefaults()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors">
+            Reset Demo Data
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI METRIC CARDS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 uppercase">Total Businesses</div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2" id="admin-kpi-businesses">0</div>
+          <div class="text-[11px] text-teal-600 font-semibold mt-1">↑ Active in Directory</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 uppercase">Featured Subscriptions</div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-amber-600 mt-2" id="admin-kpi-featured">0</div>
+          <div class="text-[11px] text-amber-700 font-semibold mt-1">Paid monthly tier</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 uppercase">Estimated MRR</div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-teal-700 mt-2" id="admin-kpi-mrr">₹0</div>
+          <div class="text-[11px] text-slate-500 font-medium mt-1">Recurring Revenue / mo</div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="text-xs font-bold text-slate-400 uppercase">Total Community Reviews</div>
+          <div class="text-2xl sm:text-3xl font-extrabold text-indigo-600 mt-2" id="admin-kpi-reviews">0</div>
+          <div class="text-[11px] text-indigo-600 font-semibold mt-1">100% Verified authenticity</div>
+        </div>
+      </div>
+
+      <!-- ADMIN TABS (Businesses, Pricing Management, Reviews) -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex border-b border-slate-200 bg-slate-50/70 px-4 pt-3 gap-2">
+          <button onclick="switchAdminTab('businesses')" id="admin-tab-btn-businesses" class="px-4 py-2 text-xs font-bold rounded-t-xl bg-white text-slate-900 border-t border-x border-slate-200 -mb-px">Manage Businesses (<span id="admin-tab-count">0</span>)</button>
+          <button onclick="switchAdminTab('pricing')" id="admin-tab-btn-pricing" class="px-4 py-2 text-xs font-bold rounded-t-xl text-slate-500 hover:text-slate-900">Subscription Plans & Pricing</button>
+          <button onclick="switchAdminTab('reviews')" id="admin-tab-btn-reviews" class="px-4 py-2 text-xs font-bold rounded-t-xl text-slate-500 hover:text-slate-900">Moderate Reviews</button>
+        </div>
+
+        <!-- TAB CONTENT 1: BUSINESSES TABLE -->
+        <div id="admin-tab-content-businesses" class="p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <input type="text" id="admin-table-search" oninput="renderAdminBusinessesTable()" placeholder="Filter by name, category, or city..." class="px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl max-w-sm focus:outline-none focus:bg-white focus:border-teal-600">
+            <button onclick="showView('list-business')" class="px-3.5 py-2 rounded-xl bg-teal-600 text-white font-bold text-xs hover:bg-teal-700 flex items-center gap-1">
+              <span>+ Add New Business</span>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600">
+              <thead class="bg-slate-50 text-slate-400 uppercase font-semibold border-b border-slate-200 text-[10px]">
+                <tr>
+                  <th class="p-3">Business</th>
+                  <th class="p-3">Category</th>
+                  <th class="p-3">City</th>
+                  <th class="p-3">Rating</th>
+                  <th class="p-3">Verified Status</th>
+                  <th class="p-3">Featured Status</th>
+                  <th class="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="admin-businesses-tbody" class="divide-y divide-slate-100 font-medium">
+                <!-- Injected via renderAdminBusinessesTable() -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT 2: PRICING PLANS MANAGER -->
+        <div id="admin-tab-content-pricing" class="hidden p-6 max-w-3xl">
+          <h3 class="text-base font-bold text-slate-900">Edit Monthly Subscription Fees</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-6">Modify live subscription prices displayed across the registration onboarding flow and landing banners.</p>
+
+          <form onsubmit="handleAdminUpdatePricing(event)" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200">
+                <label class="block text-xs font-bold text-amber-900 mb-1">Featured Tier Fee (₹ / month)</label>
+                <input type="number" id="admin-input-featured-price" required min="99" max="9999" class="w-full px-3.5 py-2 text-sm font-bold bg-white border border-amber-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-400">
+                <p class="text-[11px] text-amber-700 mt-1.5">Includes home page carousel, gold badge, priority ranking.</p>
+              </div>
+
+              <div class="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-200">
+                <label class="block text-xs font-bold text-indigo-900 mb-1">Premium Tier Fee (₹ / month)</label>
+                <input type="number" id="admin-input-premium-price" required min="199" max="19999" class="w-full px-3.5 py-2 text-sm font-bold bg-white border border-indigo-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <p class="text-[11px] text-indigo-700 mt-1.5">Includes #1 slot guarantee, verified shield, analytics.</p>
+              </div>
+            </div>
+
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors shadow">
+              Save Pricing Changes
+            </button>
+          </form>
+        </div>
+
+        <!-- TAB CONTENT 3: REVIEWS MODERATION -->
+        <div id="admin-tab-content-reviews" class="hidden p-6">
+          <h3 class="text-base font-bold text-slate-900">User Reviews Moderation Queue</h3>
+          <p class="text-xs text-slate-500 mt-1 mb-4">Review and remove reported or spam ratings.</p>
+          <div class="space-y-3" id="admin-reviews-list">
+            <!-- Injected via renderAdminReviewsQueue() -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==================== GLOBAL FOOTER ==================== -->
+  <footer class="bg-slate-900 text-slate-300 border-t border-slate-800 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+        <!-- Brand column -->
+        <div class="col-span-2 space-y-4">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-xl bg-teal-500 flex items-center justify-center text-white font-bold">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+            </div>
+            <span class="text-xl font-extrabold text-white tracking-tight">Local<span class="text-teal-400">Find</span></span>
+          </div>
+          <p class="text-slate-400 text-xs leading-relaxed max-w-sm">
+            LocalFind empowers neighborhood residents to find, compare, and connect with trusted local professionals. Zero middleman booking commission.
+          </p>
+          <div class="flex items-center gap-3 pt-2 text-slate-400">
+            <a href="#" class="hover:text-teal-400 transition-colors" title="Twitter / X">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            </a>
+            <a href="#" class="hover:text-teal-400 transition-colors" title="Instagram">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+            <a href="#" class="hover:text-teal-400 transition-colors" title="LinkedIn">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <!-- Col: Discovery -->
+        <div>
+          <h4 class="font-bold text-white uppercase text-[11px] tracking-wider mb-3">Discovery</h4>
+          <ul class="space-y-2 text-slate-400">
+            <li><a href="#" onclick="showView('explore'); return false;" class="hover:text-white transition-colors">Explore All Services</a></li>
+            <li><a href="#" onclick="filterExploreBy('featured'); return false;" class="hover:text-white transition-colors">Featured Listings</a></li>
+            <li><a href="#" onclick="filterExploreBy('top-rated'); return false;" class="hover:text-white transition-colors">Top Rated (4.5+ ★)</a></li>
+            <li><a href="#" onclick="showView('categories'); return false;" class="hover:text-white transition-colors">Browse Categories</a></li>
+            <li><a href="#" onclick="openSchemaModal(); return false;" class="hover:text-teal-400 transition-colors">Relational ER Schema</a></li>
+          </ul>
+        </div>
+
+        <!-- Col: Business Owners -->
+        <div>
+          <h4 class="font-bold text-white uppercase text-[11px] tracking-wider mb-3">For Businesses</h4>
+          <ul class="space-y-2 text-slate-400">
+            <li><a href="#" onclick="showView('list-business'); return false;" class="hover:text-white transition-colors text-amber-400 font-semibold">List Your Business</a></li>
+            <li><a href="#" onclick="showPricingPlansModal(); return false;" class="hover:text-white transition-colors">Advertising & Featured</a></li>
+            <li><a href="#" onclick="openAuthModal('signup'); return false;" class="hover:text-white transition-colors">Owner Portal</a></li>
+            <li><a href="#" onclick="showView('admin'); return false;" class="hover:text-white transition-colors">Admin Management</a></li>
+            <li><a href="#" onclick="showToast('Lead conversion analytics are refreshed every hour!'); return false;" class="hover:text-white transition-colors">Success Stories</a></li>
+          </ul>
+        </div>
+
+        <!-- Col: Support & Legal -->
+        <div>
+          <h4 class="font-bold text-white uppercase text-[11px] tracking-wider mb-3">Company</h4>
+          <ul class="space-y-2 text-slate-400">
+            <li><a href="#" onclick="showToast('LocalFind was built to empower neighborhood small businesses.'); return false;" class="hover:text-white transition-colors">About LocalFind</a></li>
+            <li><a href="#" onclick="showToast('Support helpline: help@localfind.in'); return false;" class="hover:text-white transition-colors">Help & Contact</a></li>
+            <li><a href="#" onclick="showToast('Privacy Policy: No personal data is sold to third parties.'); return false;" class="hover:text-white transition-colors">Privacy Policy</a></li>
+            <li><a href="#" onclick="showToast('Terms of Service: All listed vendors are independently verified.'); return false;" class="hover:text-white transition-colors">Terms of Use</a></li>
+            <li><a href="#" onclick="showToast('System operational: All services running at 99.99% uptime.'); return false;" class="hover:text-white transition-colors">System Status</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="mt-12 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500 text-[11px]">
+        <div>
+          &copy; 2026 LocalFind. All rights reserved. Built for modern local discovery.
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Live Relational Architecture</span>
+          <span>•</span>
+          <span>Visakhapatnam &bull; Hyderabad &bull; Bengaluru &bull; Vijayawada &bull; Chennai</span>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== MODALS ==================== -->
+  <!-- 1. AUTH MODAL -->
+  <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95">
+      <button onclick="closeAuthModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+
+      <div class="text-center mb-6">
+        <div class="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center mx-auto mb-2 font-bold shadow">LF</div>
+        <h3 class="text-xl font-bold text-slate-900" id="auth-modal-title">Welcome to LocalFind</h3>
+        <p class="text-xs text-slate-500 mt-0.5">Find trusted services or manage your business</p>
+      </div>
+
+      <!-- Auth Switcher Tabs -->
+      <div class="flex bg-slate-100 p-1 rounded-xl mb-5">
+        <button id="auth-tab-login" onclick="setAuthTab('login')" class="flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm">Log in</button>
+        <button id="auth-tab-signup" onclick="setAuthTab('signup')" class="flex-1 py-1.5 text-xs font-bold text-slate-600">Sign up</button>
+      </div>
+
+      <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div id="auth-signup-fields" class="space-y-4 hidden">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+            <input type="text" id="auth-name" placeholder="John Doe" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-600">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">I am registering as</label>
+            <select id="auth-role" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-600">
+              <option value="user">Local Customer looking for services</option>
+              <option value="owner">Business Owner looking to list my service</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+          <input type="email" id="auth-email" required placeholder="you@example.com" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-600">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
+          <input type="password" id="auth-password" required placeholder="••••••••" class="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-600">
+        </div>
+
+        <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors">
+          Continue
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. WRITE REVIEW MODAL -->
+  <div id="review-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative">
+      <button onclick="closeReviewModal()" class="absolute top-5 right-5 text-slate-400 hover:text-slate-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+
+      <div class="mb-4">
+        <span class="text-xs font-bold text-teal-600 uppercase">Community Feedback</span>
+        <h3 class="text-xl font-bold text-slate-900 mt-1">Write a Review</h3>
+        <p class="text-xs text-slate-500" id="review-modal-biz-name">Business Name</p>
+      </div>
+
+      <form onsubmit="handleReviewSubmit(event)" class="space-y-4">
+        <input type="hidden" id="review-business-id">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Your Name</label>
+          <input type="text" id="review-author" required placeholder="e.g. Sravani Rao" class="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-600">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Your Rating</label>
+          <div class="flex items-center gap-2" id="star-rating-selector">
+            <button type="button" onclick="setModalStarRating(1)" class="star-btn text-2xl text-slate-200 hover:text-amber-400">★</button>
+            <button type="button" onclick="setModalStarRating(2)" class="star-btn text-2xl text-slate-200 hover:text-amber-400">★</button>
+            <button type="button" onclick="setModalStarRating(3)" class="star-btn text-2xl text-slate-200 hover:text-amber-400">★</button>
+            <button type="button" onclick="setModalStarRating(4)" class="star-btn text-2xl text-slate-200 hover:text-amber-400">★</button>
+            <button type="button" onclick="setModalStarRating(5)" class="star-btn text-2xl text-amber-400">★</button>
+            <input type="hidden" id="review-stars-val" value="5">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Detailed Review</label>
+          <textarea id="review-comment" required rows="3" placeholder="Share specific details about promptness, price transparency, and work quality..." class="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:bg-white focus:border-teal-600"></textarea>
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl shadow transition-colors">
+          Publish Review
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. DIRECT CONTACT / WHATSAPP PROMPT MODAL -->
+  <div id="contact-modal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 text-center relative">
+      <button onclick="closeContactModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+      </button>
+      <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3 text-2xl" id="contact-modal-icon">
+        📞
+      </div>
+      <h3 class="text-lg font-bold text-slate-900" id="contact-modal-title">Connect with Business</h3>
+      <p class="text-xs text-slate-500 mt-1 mb-4" id="contact-modal-desc">Direct line with zero commission</p>
+
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 mb-4 font-mono font-bold text-sm text-slate-800" id="contact-modal-value">
+        +91 98480 12345
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="executeContactAction()" id="contact-modal-action-btn" class="flex-1 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-xl transition-colors">
+          Call Now
+        </button>
+        <button onclick="copyContactToClipboard()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors">
+          Copy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. DATABASE RELATIONAL SCHEMA INSPECTOR MODAL -->
+  <div id="schema-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-teal-100 text-teal-800 text-[10px] font-bold">SQL / RDBMS</span>
+            <h3 class="text-lg font-bold text-slate-900">LocalFind Relational Database Architecture</h3>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">Formal entity relationship schema adhering to normalization & indexed foreign keys</p>
+        </div>
+        <button onclick="closeSchemaModal()" class="p-1 text-slate-400 hover:text-slate-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-6 text-xs text-slate-700">
+        <!-- ER Relationship Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="p-3 bg-teal-50 rounded-xl border border-teal-200">
+            <div class="font-bold text-teal-900">1:N Categories &rarr; Businesses</div>
+            <div class="text-[11px] text-teal-700 mt-1">One category houses multiple service providers.</div>
+          </div>
+          <div class="p-3 bg-blue-50 rounded-xl border border-blue-200">
+            <div class="font-bold text-blue-900">1:N Locations &rarr; Businesses</div>
+            <div class="text-[11px] text-blue-700 mt-1">One city/neighborhood indexes multiple businesses.</div>
+          </div>
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200">
+            <div class="font-bold text-amber-900">1:1 Business &harr; Subscription</div>
+            <div class="text-[11px] text-amber-800 mt-1">Active paid tier triggers Featured Listing placement.</div>
+          </div>
+        </div>
+
+        <!-- Schema Tables Breakdown -->
+        <div class="space-y-4">
+          <div class="font-bold text-slate-900 uppercase text-[11px] tracking-wider">Normalized Database Tables</div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Table 1: Businesses -->
+            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+              <div class="font-bold text-slate-900 flex justify-between">
+                <span>table: `businesses`</span>
+                <span class="text-teal-600 text-[10px]">Primary Entity</span>
+              </div>
+              <ul class="mt-2 space-y-1 font-mono text-[11px] text-slate-600">
+                <li><span class="text-amber-700 font-bold">id</span> (UUID, PK)</li>
+                <li><span class="text-blue-700">owner_id</span> (UUID, FK &rarr; users.id)</li>
+                <li><span class="text-blue-700">category_id</span> (VARCHAR, FK &rarr; categories.id)</li>
+                <li><span class="text-blue-700">location_id</span> (VARCHAR, FK &rarr; locations.id)</li>
+                <li>name (VARCHAR 150)</li>
+                <li>phone, whatsapp, email (VARCHAR)</li>
+                <li>price_tier (ENUM: '₹', '₹₹', '₹₹₹')</li>
+                <li>is_verified (BOOLEAN, DEFAULT FALSE)</li>
+                <li>is_featured (BOOLEAN, DEFAULT FALSE)</li>
+                <li>created_at (TIMESTAMP)</li>
+              </ul>
+            </div>
+
+            <!-- Table 2: Subscriptions & FeaturedListings -->
+            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+              <div class="font-bold text-slate-900 flex justify-between">
+                <span>table: `subscriptions`</span>
+                <span class="text-amber-600 text-[10px]">Monetization</span>
+              </div>
+              <ul class="mt-2 space-y-1 font-mono text-[11px] text-slate-600">
+                <li><span class="text-amber-700 font-bold">id</span> (UUID, PK)</li>
+                <li><span class="text-blue-700">business_id</span> (UUID, FK &rarr; businesses.id)</li>
+                <li>plan_type (ENUM: 'FREE', 'FEATURED', 'PREMIUM')</li>
+                <li>monthly_amount (DECIMAL 10,2)</li>
+                <li>billing_status (ENUM: 'active', 'overdue', 'cancelled')</li>
+                <li>valid_until (TIMESTAMP)</li>
+              </ul>
+            </div>
+
+            <!-- Table 3: Reviews -->
+            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+              <div class="font-bold text-slate-900 flex justify-between">
+                <span>table: `reviews`</span>
+                <span class="text-indigo-600 text-[10px]">1:N</span>
+              </div>
+              <ul class="mt-2 space-y-1 font-mono text-[11px] text-slate-600">
+                <li><span class="text-amber-700 font-bold">id</span> (UUID, PK)</li>
+                <li><span class="text-blue-700">business_id</span> (UUID, FK &rarr; businesses.id)</li>
+                <li>author_name (VARCHAR 100)</li>
+                <li>rating (TINYINT 1..5)</li>
+                <li>review_comment (TEXT)</li>
+                <li>created_at (TIMESTAMP)</li>
+              </ul>
+            </div>
+
+            <!-- Table 4: BusinessImages -->
+            <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+              <div class="font-bold text-slate-900 flex justify-between">
+                <span>table: `business_images`</span>
+                <span class="text-emerald-600 text-[10px]">1:N</span>
+              </div>
+              <ul class="mt-2 space-y-1 font-mono text-[11px] text-slate-600">
+                <li><span class="text-amber-700 font-bold">id</span> (UUID, PK)</li>
+                <li><span class="text-blue-700">business_id</span> (UUID, FK &rarr; businesses.id)</li>
+                <li>image_url (VARCHAR 500)</li>
+                <li>is_cover (BOOLEAN)</li>
+                <li>display_order (INT)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end">
+        <button onclick="closeSchemaModal()" class="px-5 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">Close Schema</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    // ==========================================
+    // 1. DATA STRUCTURES & INITIAL STORE
+    // ==========================================
+    const DEFAULT_LOCATIONS = [
+      { id: 'vskp', name: 'Visakhapatnam', state: 'Andhra Pradesh', activeCount: 6, tag: 'Coastal Hub' },
+      { id: 'vja', name: 'Vijayawada', state: 'Andhra Pradesh', activeCount: 4, tag: 'Commercial' },
+      { id: 'hyd', name: 'Hyderabad', state: 'Telangana', activeCount: 9, tag: 'Metro' },
+      { id: 'blr', name: 'Bengaluru', state: 'Karnataka', activeCount: 8, tag: 'Tech Hub' },
+      { id: 'chn', name: 'Chennai', state: 'Tamil Nadu', activeCount: 5, tag: 'Metro' }
+    ];
+
+    const DEFAULT_CATEGORIES = [
+      { id: 'cafes', name: 'Restaurants & Cafes', icon: '☕', count: 18, color: 'bg-amber-100 text-amber-800' },
+      { id: 'plumbers', name: 'Plumbers', icon: '🔧', count: 14, color: 'bg-blue-100 text-blue-800' },
+      { id: 'electricians', name: 'Electricians', icon: '⚡', count: 12, color: 'bg-yellow-100 text-yellow-800' },
+      { id: 'salons', name: 'Salons & Beauty', icon: '✂️', count: 20, color: 'bg-pink-100 text-pink-800' },
+      { id: 'mechanics', name: 'Mechanics', icon: '🚗', count: 11, color: 'bg-slate-100 text-slate-800' },
+      { id: 'tutors', name: 'Tutors', icon: '📚', count: 16, color: 'bg-indigo-100 text-indigo-800' },
+      { id: 'home', name: 'Home Services', icon: '🧹', count: 22, color: 'bg-emerald-100 text-emerald-800' },
+      { id: 'medical', name: 'Medical Services', icon: '🩺', count: 15, color: 'bg-rose-100 text-rose-800' },
+      { id: 'electronics', name: 'Electronics Repair', icon: '📱', count: 13, color: 'bg-cyan-100 text-cyan-800' },
+      { id: 'fitness', name: 'Fitness & Gyms', icon: '🏋️', count: 9, color: 'bg-orange-100 text-orange-800' }
+    ];
+
+    // Seed Sample Businesses with realistic Indian context
+    const SEED_BUSINESSES = [
+      {
+        id: 'biz-1',
+        name: 'Bay Breeze Artisanal Cafe & Roastery',
+        category: 'cafes',
+        city: 'Visakhapatnam',
+        neighborhood: 'Beach Road / Lawson\'s Bay',
+        address: 'Plot 14, Beach Road, near Submarine Museum, Visakhapatnam',
+        rating: 4.9,
+        reviewsCount: 142,
+        price: '₹₹',
+        distanceKm: 1.2,
+        isVerified: true,
+        isFeatured: true,
+        isOpenNow: true,
+        phone: '+91 891 278 4501',
+        whatsapp: '+91 98480 32110',
+        email: 'hello@baybreezeroasters.in',
+        website: 'https://baybreeze.in',
+        description: 'Artisanal single-origin filter coffees, wood-fired sourdough pizzas, and breezy oceanview patio seating.',
+        hours: '7:30 AM – 10:30 PM (Daily)',
+        coverImage: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop&q=80',
+        gallery: [
+          'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80'
+        ],
+        services: ['Cold Brew Flights', 'Hand-stretched Pizzas', 'Outdoor Seating', 'High Speed Wi-Fi', 'Pet Friendly'],
+        latOffset: 45,
+        lngOffset: 55,
+        reviews: [
+          { id: 'r-101', author: 'Vikram Raju', rating: 5, date: 'Yesterday', text: 'Best cold brew in Vizag. Sitting on the deck facing the Bay of Bengal while working is unbeatable!' },
+          { id: 'r-102', author: 'Deepika S.', rating: 5, date: '3 days ago', text: 'Prompt service, immaculate hygiene, and their pistachio croissant is out of this world.' }
+        ]
+      },
+      {
+        id: 'biz-2',
+        name: 'Apex Fast-Fix Emergency Plumbers',
+        category: 'plumbers',
+        city: 'Visakhapatnam',
+        neighborhood: 'MVP Colony / Sector 3',
+        address: 'Sector 3, MVP Double Road, opposite Rythu Bazar, Visakhapatnam',
+        rating: 4.8,
+        reviewsCount: 98,
+        price: '₹',
+        distanceKm: 2.5,
+        isVerified: true,
+        isFeatured: true,
+        isOpenNow: true,
+        phone: '+91 94401 88231',
+        whatsapp: '+91 94401 88231',
+        email: 'service@apexfastfix.in',
+        website: 'https://apexplumbing.in',
+        description: 'Certified 24/7 master plumbing crew for rapid pipe leak repairs, geyser installs, and bathroom overhauls.',
+        hours: '24 Hours Emergency Service',
+        coverImage: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&auto=format&fit=crop&q=80',
+        gallery: [
+          'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80'
+        ],
+        services: ['Leak Repair in 30 Mins', 'Geyser Installation', 'Drain Unclogging', 'Water Tank Cleaning', 'Pipe Replacements'],
+        latOffset: 30,
+        lngOffset: 70,
+        reviews: [
+          { id: 'r-103', author: 'Kalyan M.', rating: 5, date: '1 week ago', text: 'Arrived in 25 minutes on a Sunday night when our kitchen valve burst. Saved our wooden flooring!' }
+        ]
+      },
+      {
+        id: 'biz-3',
+        name: 'Glamour Lounge Unisex Luxury Salon',
+        category: 'salons',
+        city: 'Hyderabad',
+        neighborhood: 'Jubilee Hills / Road No. 36',
+        address: 'Road No. 36, Jubilee Hills, Near Metro Pillar 1650, Hyderabad',
+        rating: 4.9,
+        reviewsCount: 215,
+        price: '₹₹₹',
+        distanceKm: 3.8,
+        isVerified: true,
+        isFeatured: true,
+        isOpenNow: true,
+        phone: '+91 40 2355 9011',
+        whatsapp: '+91 91000 45678',
+        email: 'appointments@glamourlounge.in',
+        website: 'https://glamourloungehyd.com',
+        description: 'Celebrity stylists, organic hair spa therapies, bridal makeovers, and custom nail art in a serene luxury studio.',
+        hours: '9:00 AM – 9:00 PM (Tue-Sun)',
+        coverImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=80',
+        gallery: [
+          'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&auto=format&fit=crop&q=80'
+        ],
+        services: ['Keratin Hair Treatment', 'Bridal Couture Makeup', 'Spa Pedicure', 'Beard Sculpting', 'Skin Radiance Facials'],
+        latOffset: 60,
+        lngOffset: 35,
+        reviews: [
+          { id: 'r-104', author: 'Ananya Reddy', rating: 5, date: '4 days ago', text: 'Super professional staff and relaxing atmosphere. The stylist listened carefully to what I wanted.' }
+        ]
+      },
+      {
+        id: 'biz-4',
+        name: 'ElectroCraft Certified Smart Home Electricians',
+        category: 'electricians',
+        city: 'Bengaluru',
+        neighborhood: 'Indiranagar / 100ft Road',
+        address: '100ft Road, Defence Colony, Indiranagar, Bengaluru',
+        rating: 4.7,
+        reviewsCount: 84,
+        price: '₹₹',
+        distanceKm: 4.1,
+        isVerified: true,
+        isFeatured: false,
+        isOpenNow: true,
+        phone: '+91 80 4120 7733',
+        whatsapp: '+91 98860 11223',
+        email: 'support@electrocraftblr.com',
+        website: 'https://electrocraftblr.com',
+        description: 'Licensed technicians specializing in full home rewiring, EV charger setup, smart home automation, and circuit repairs.',
+        hours: '8:00 AM – 8:00 PM',
+        coverImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80',
+        gallery: [
+          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80'
+        ],
+        services: ['EV Wallbox Charging Unit', 'Smart Light Automation', 'Inverter Installation', 'MCB Tripping Fixes'],
+        latOffset: 35,
+        lngOffset: 45,
+        reviews: [
+          { id: 'r-105', author: 'Naveen Kumar', rating: 4, date: '2 weeks ago', text: 'Fair pricing, polite technicians, and verified licensed credentials.' }
+        ]
+      },
+      {
+        id: 'biz-5',
+        name: 'Precision Auto Tech Multi-Brand Car Care',
+        category: 'mechanics',
+        city: 'Visakhapatnam',
+        neighborhood: 'Gajuwaka / Auto Nagar',
+        address: 'Block B, Industrial Estate, Auto Nagar, Gajuwaka, Visakhapatnam',
+        rating: 4.8,
+        reviewsCount: 112,
+        price: '₹₹',
+        distanceKm: 6.4,
+        isVerified: true,
+        isFeatured: false,
+        isOpenNow: false,
+        phone: '+91 891 251 7780',
+        whatsapp: '+91 97000 88990',
+        email: 'service@precisionautovizag.com',
+        website: '',
+        description: 'Advanced computer diagnostics, wheel balancing, AC cooling gas refill, brake overhauls, and cashless insurance claims.',
+        hours: '9:00 AM – 7:30 PM (Mon-Sat)',
+        coverImage: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=800&auto=format&fit=crop&q=80',
+        gallery: [
+          'https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=800&auto=format&fit=crop&q=80'
+        ],
+        services: ['Periodic Car Maintenance', 'Computer OBD Scanning', 'Synthetic Oil Change', 'Clutch Repair'],
+        latOffset: 75,
+        lngOffset: 25,
+        reviews: [
+          { id: 'r-106', author: 'Satish Naidu', rating: 5, date: '1 month ago', text: 'Transparent billing and they sent before/after WhatsApp videos of all replaced spare parts.' }
+        ]
+      },
+      {
+        id: 'biz-6',
+        name: 'Ignite IIT-JEE & Olympiad Math Tutors',
+        category: 'tutors',
+        city: 'Vijayawada',
+        neighborhood: 'M.G. Road / Governorpet',
+        address: 'Bunder Road, near Benz Circle, Vijayawada',
+        rating: 4.9,
+        reviewsCount: 130,
+        price: '₹₹',
+        distanceKm: 1.8,
+        isVerified: true,
+        isFeatured: true,
+        isOpenNow: true,
+        phone: '+91 866 244 5590',
+        whatsapp: '+91 99890 33441',
+        email: 'admissions@ignitetutors.in',
+        website: 'https://ignitetutors.in',
+        description: 'Small-batch specialized tutoring led by IIT graduates. Focus on conceptual clarity, weekly mocks, and personal doubt clinics.',
+        hours: '6:30 AM – 8:30 PM',
+        coverImage: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80',
+        gallery: [
+          'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80'
+        ],
+        services: ['IIT-JEE Advanced Coaching', '1-on-1 Math Mentoring', 'Doubt Clearing Sessions', 'Online Homework App'],
+        latOffset: 40,
+        lngOffset: 65,
+        reviews: [
+          { id: 'r-107', author: 'Padma V.', rating: 5, date: '3 weeks ago', text: 'My son gained tremendous confidence in Calculus. Exemplary faculty.' }
+        ]
+      },
+      {
+        id: 'biz-7',
+        name: 'SparkleClean Professional Deep Home Cleaning',
+        category: 'home',
+        city: 'Chennai',
+        neighborhood: 'Adyar / Besant Nagar',
+        address: '4th Main Road, Gandhi Nagar, Adyar, Chennai',
+        rating: 4.6,
+        reviewsCount: 65,
+        price: '₹₹',
+        distanceKm: 5.2,
+        isVerified: true,
+        isFeatured: false,
+        isOpenNow: true,
+        phone: '+91 44 2491 6620',
+        whatsapp: '+91 98400 77120',
+        email: 'book@sparklecleanchennai.in',
+        website: '',
+        description: 'Hospital-grade sanitization, sofa shampooing, chimney degreasing, and move-in deep cleaning with industrial machines.',
+        hours: '8:00 AM – 7:00 PM',
+        coverImage: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80',
+        gallery: [
+          'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80'
+        ],
+        services: ['Full Villa Deep Cleaning', 'Sofa & Mattress Sanitization', 'Kitchen Degreasing', 'Floor Polishing'],
+        latOffset: 65,
+        lngOffset: 60,
+        reviews: [
+          { id: 'r-108', author: 'Raghavan K.', rating: 4, date: '2 weeks ago', text: 'Prompt and thorough. Cleaned every corner before our housewarming ceremony.' }
+        ]
+      },
+      {
+        id: 'biz-8',
+        name: 'LifeForce Integrated Physiotherapy Clinic',
+        category: 'medical',
+        city: 'Hyderabad',
+        neighborhood: 'Gachibowli / Financial District',
+        address: 'Gachibowli Main Rd, near Bio-Diversity Park, Hyderabad',
+        rating: 4.9,
+        reviewsCount: 92,
+        price: '₹₹',
+        distanceKm: 3.1,
+        isVerified: true,
+        isFeatured: false,
+        isOpenNow: true,
+        phone: '+91 40 4012 3344',
+        whatsapp: '+91 91000 88220',
+        email: 'appointments@lifeforcephysio.in',
+        website: 'https://lifeforcephysio.in',
+        description: 'Sports injury rehabilitation, spine ergonomics, geriatric mobility recovery, and post-surgery therapeutic care.',
+        hours: '8:00 AM – 8:30 PM',
+        coverImage: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80',
+        gallery: [
+          'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=80'
+        ],
+        services: ['Spine Decompression', 'Sports Physio Rehab', 'Dry Needling Therapy', 'Ergonomic Desk Assessment'],
+        latOffset: 25,
+        lngOffset: 40,
+        reviews: [
+          { id: 'r-109', author: 'Pooja T.', rating: 5, date: '5 days ago', text: 'Relieved my chronic posture neck pain in just four sessions. Dr. Suresh was exceptional.' }
+        ]
+      }
+    ];
+
+    // Local in-memory State
+    let appState = {
+      currentView: 'home',
+      currentCity: 'Visakhapatnam',
+      selectedBusinessId: null,
+      currentUser: null,
+      pricing: {
+        featured: 499,
+        premium: 999
+      },
+      selectedRegPlan: 'FEATURED',
+      businesses: JSON.parse(JSON.stringify(SEED_BUSINESSES)),
+      categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
+      locations: JSON.parse(JSON.stringify(DEFAULT_LOCATIONS)),
+      filter: {
+        query: '',
+        city: 'ALL',
+        category: 'ALL',
+        sort: 'rating',
+        price: 'ALL',
+        openNow: false,
+        verifiedOnly: false,
+        featuredFirst: true
+      },
+      exploreDisplayMode: 'split', // 'split' or 'grid'
+      adminTab: 'businesses'
+    };
+
+    // Pending contact modal action state
+    let activeContactActionData = null;
+
+    // ==========================================
+    // 2. VIEW NAVIGATION & ROUTING
+    // ==========================================
+    function showView(viewName, paramId = null) {
+      appState.currentView = viewName;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      // Hide all views
+      document.querySelectorAll('.page-view').forEach(el => el.classList.add('hidden'));
+
+      // Update Nav active classes
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.getAttribute('data-nav') === viewName) {
+          link.classList.add('text-teal-600', 'font-bold');
+        } else {
+          link.classList.remove('text-teal-600', 'font-bold');
+        }
+      });
+
+      if (viewName === 'home') {
+        document.getElementById('view-home').classList.remove('hidden');
+        renderHomeSections();
+      } else if (viewName === 'explore') {
+        document.getElementById('view-explore').classList.remove('hidden');
+        renderExploreDirectory();
+      } else if (viewName === 'categories') {
+        document.getElementById('view-categories').classList.remove('hidden');
+        renderAllCategoriesFullGrid();
+      } else if (viewName === 'details') {
+        document.getElementById('view-details').classList.remove('hidden');
+        if (paramId) appState.selectedBusinessId = paramId;
+        renderBusinessDetails(appState.selectedBusinessId);
+      } else if (viewName === 'list-business') {
+        document.getElementById('view-list-business').classList.remove('hidden');
+        populateRegistrationDropdowns();
+        updateLiveCardPreview();
+      } else if (viewName === 'admin') {
+        document.getElementById('view-admin').classList.remove('hidden');
+        renderAdminDashboard();
+      }
+    }
+
+    function navigateBackFromDetails() {
+      showView('explore');
+    }
+
+    // ==========================================
+    // 3. HOME VIEW RENDERING
+    // ==========================================
+    function renderHomeSections() {
+      renderCategoriesGrid();
+      renderHomeFeaturedCards();
+      renderHomeTopRatedCards();
+      renderHomeLocationsCards();
+      updatePricingBadgesAcrossUI();
+    }
+
+    function renderCategoriesGrid() {
+      const container = document.getElementById('home-categories-grid');
+      if (!container) return;
+
+      container.innerHTML = appState.categories.map(cat => `
+        <div onclick="filterExploreByCategory('${cat.id}')" class="bg-white hover:bg-teal-50/50 p-4 rounded-2xl border border-slate-200 hover:border-teal-300 hover:shadow-md transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+          <div class="w-12 h-12 rounded-2xl ${cat.color} flex items-center justify-center text-2xl mb-2.5 group-hover:scale-110 transition-transform shadow-xs">
+            ${cat.icon}
+          </div>
+          <h3 class="text-xs font-bold text-slate-800 group-hover:text-teal-700 transition-colors">${cat.name}</h3>
+          <span class="text-[10px] text-slate-400 mt-1">${cat.count} listings</span>
+        </div>
+      `).join('');
+    }
+
+    function renderHomeFeaturedCards() {
+      const container = document.getElementById('home-featured-grid');
+      if (!container) return;
+
+      const featuredList = appState.businesses.filter(b => b.isFeatured);
+      container.innerHTML = featuredList.slice(0, 3).map(biz => createBusinessCardHTML(biz, true)).join('');
+    }
+
+    function renderHomeTopRatedCards() {
+      const container = document.getElementById('home-toprated-grid');
+      if (!container) return;
+
+      const sortedByRating = [...appState.businesses].sort((a, b) => b.rating - a.rating);
+      container.innerHTML = sortedByRating.slice(0, 3).map(biz => createBusinessCardHTML(biz, false)).join('');
+    }
+
+    function renderHomeLocationsCards() {
+      const container = document.getElementById('home-locations-grid');
+      if (!container) return;
+
+      container.innerHTML = appState.locations.map(loc => `
+        <div onclick="filterExploreByLocation('${loc.name}')" class="bg-white hover:bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-slate-300 transition-all cursor-pointer group shadow-xs">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm">📍</span>
+            <span class="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full">${loc.tag}</span>
+          </div>
+          <h4 class="text-sm font-bold text-slate-900 group-hover:text-teal-600 transition-colors">${loc.name}</h4>
+          <p class="text-[11px] text-slate-400 mt-0.5">${loc.state}</p>
+          <div class="mt-3 text-[11px] font-semibold text-teal-700 flex items-center gap-1">
+            <span>Explore Pros</span>
+            <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Helper: Reusable Business Card Component
+    function createBusinessCardHTML(biz, isFeaturedCard = false) {
+      const catObj = appState.categories.find(c => c.id === biz.category) || { name: biz.category, icon: '🏷️' };
+
+      return `
+        <div class="bg-white rounded-3xl border ${biz.isFeatured ? 'border-amber-300 shadow-sm' : 'border-slate-200 shadow-xs'} hover:shadow-xl transition-all overflow-hidden flex flex-col group">
+          <!-- Card Image Header -->
+          <div class="relative h-44 overflow-hidden bg-slate-100 cursor-pointer" onclick="showView('details', '${biz.id}')">
+            <img src="${biz.coverImage}" alt="${biz.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onerror="this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600'">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+
+            <!-- Badges overlay -->
+            <div class="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+              ${biz.isFeatured ? `
+                <span class="inline-flex items-center gap-1 bg-amber-500 text-slate-950 font-extrabold text-[10px] px-2.5 py-1 rounded-full shadow-md uppercase tracking-wider badge-glow">
+                  <span>★</span> Featured
+                </span>
+              ` : ''}
+              ${biz.isVerified ? `
+                <span class="inline-flex items-center gap-1 bg-white/95 text-teal-700 font-bold text-[10px] px-2 py-0.5 rounded-full shadow backdrop-blur-xs">
+                  <span class="text-teal-600 font-black">✓</span> Verified
+                </span>
+              ` : ''}
+            </div>
+
+            <!-- Price & Open status overlay -->
+            <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
+              <span class="font-bold bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded-md border border-white/20">${biz.price}</span>
+              <span class="font-semibold px-2 py-0.5 rounded-md ${biz.isOpenNow ? 'bg-emerald-600/90' : 'bg-slate-800/90'} backdrop-blur-xs text-[10px]">
+                ${biz.isOpenNow ? 'Open Now' : 'Closed'}
+              </span>
+            </div>
+          </div>
+
+          <!-- Card Body -->
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1">
+                <span class="font-semibold text-teal-700">${catObj.icon} ${catObj.name}</span>
+                <span>${biz.distanceKm} km away</span>
+              </div>
+
+              <h3 onclick="showView('details', '${biz.id}')" class="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors cursor-pointer line-clamp-1">
+                ${biz.name}
+              </h3>
+
+              <div class="flex items-center gap-2 mt-1.5 text-xs">
+                <div class="flex items-center gap-1 font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                  <span class="text-amber-500">★</span>
+                  <span>${biz.rating.toFixed(1)}</span>
+                </div>
+                <span class="text-slate-400">(${biz.reviewsCount} reviews)</span>
+                <span class="text-slate-300">•</span>
+                <span class="text-slate-500 truncate max-w-[120px]">📍 ${biz.neighborhood}</span>
+              </div>
+
+              <p class="text-xs text-slate-500 mt-2.5 line-clamp-2 leading-relaxed font-normal">
+                ${biz.description}
+              </p>
+            </div>
+
+            <!-- Action Buttons Footer -->
+            <div class="mt-5 pt-3 border-t border-slate-100 flex items-center gap-2">
+              <button onclick="promptContact('${biz.id}', 'call')" class="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-teal-50 hover:text-teal-700 text-slate-700 text-xs font-bold transition-colors flex items-center justify-center gap-1.5" title="Call Business">
+                <svg class="w-3.5 h-3.5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                <span>Call</span>
+              </button>
+
+              <button onclick="promptContact('${biz.id}', 'whatsapp')" class="flex-1 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold transition-colors flex items-center justify-center gap-1.5" title="WhatsApp Business">
+                <span class="text-emerald-600 font-bold">💬</span>
+                <span>WhatsApp</span>
+              </button>
+
+              <button onclick="showDirectionsPrompt('${biz.name}', '${biz.neighborhood}, ${biz.city}')" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors" title="Get Map Directions">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+              </button>
+
+              <button onclick="showView('details', '${biz.id}')" class="py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors">
+                View
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 4. EXPLORE / DIRECTORY LOGIC
+    // ==========================================
+    function renderExploreDirectory() {
+      populateExploreFilterOptions();
+      applyFilters();
+    }
+
+    function populateExploreFilterOptions() {
+      // City options
+      const citySelect = document.getElementById('filter-city');
+      if (citySelect && citySelect.options.length <= 1) {
+        appState.locations.forEach(loc => {
+          const opt = document.createElement('option');
+          opt.value = loc.name;
+          opt.textContent = `${loc.name} (${loc.state})`;
+          citySelect.appendChild(opt);
+        });
+      }
+
+      // Category options
+      const catSelect = document.getElementById('filter-category');
+      if (catSelect && catSelect.options.length <= 1) {
+        appState.categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.id;
+          opt.textContent = `${cat.name}`;
+          catSelect.appendChild(opt);
+        });
+      }
+    }
+
+    function applyFilters() {
+      const searchInput = document.getElementById('explore-search-input');
+      const citySelect = document.getElementById('filter-city');
+      const catSelect = document.getElementById('filter-category');
+      const sortSelect = document.getElementById('filter-sort');
+
+      if (searchInput) appState.filter.query = searchInput.value.toLowerCase().trim();
+      if (citySelect) appState.filter.city = citySelect.value;
+      if (catSelect) appState.filter.category = catSelect.value;
+      if (sortSelect) appState.filter.sort = sortSelect.value;
+
+      let results = [...appState.businesses];
+
+      // 1. Text Query Filter
+      if (appState.filter.query) {
+        results = results.filter(biz => 
+          biz.name.toLowerCase().includes(appState.filter.query) ||
+          biz.description.toLowerCase().includes(appState.filter.query) ||
+          biz.neighborhood.toLowerCase().includes(appState.filter.query) ||
+          biz.services.some(s => s.toLowerCase().includes(appState.filter.query))
+        );
+      }
+
+      // 2. City Filter
+      if (appState.filter.city !== 'ALL') {
+        results = results.filter(biz => biz.city === appState.filter.city);
+      }
+
+      // 3. Category Filter
+      if (appState.filter.category !== 'ALL') {
+        results = results.filter(biz => biz.category === appState.filter.category);
+      }
+
+      // 4. Price Tier Filter
+      if (appState.filter.price !== 'ALL') {
+        results = results.filter(biz => biz.price === appState.filter.price);
+      }
+
+      // 5. Open Now Filter
+      if (appState.filter.openNow) {
+        results = results.filter(biz => biz.isOpenNow);
+      }
+
+      // 6. Verified Only
+      if (appState.filter.verifiedOnly) {
+        results = results.filter(biz => biz.isVerified);
+      }
+
+      // 7. Sorting
+      results.sort((a, b) => {
+        // If "Featured First" toggle is active, boost featured to very top
+        if (appState.filter.featuredFirst) {
+          if (a.isFeatured && !b.isFeatured) return -1;
+          if (!a.isFeatured && b.isFeatured) return 1;
+        }
+
+        if (appState.filter.sort === 'rating') {
+          return b.rating - a.rating;
+        } else if (appState.filter.sort === 'reviews') {
+          return b.reviewsCount - a.reviewsCount;
+        } else if (appState.filter.sort === 'distance') {
+          return a.distanceKm - b.distanceKm;
+        } else if (appState.filter.sort === 'name') {
+          return a.name.localeCompare(b.name);
+        }
+        return 0;
+      });
+
+      renderDirectoryListings(results);
+      renderMapPins(results);
+    }
+
+    function renderDirectoryListings(results) {
+      const container = document.getElementById('explore-cards-container');
+      const emptyState = document.getElementById('explore-empty-state');
+      const countLabel = document.getElementById('results-count-text');
+      const locationSummary = document.getElementById('active-location-summary');
+
+      if (!container) return;
+
+      countLabel.textContent = `Showing ${results.length} verified ${results.length === 1 ? 'business' : 'businesses'}`;
+      locationSummary.textContent = `Location: ${appState.filter.city === 'ALL' ? 'All South India' : appState.filter.city}`;
+
+      if (results.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      container.innerHTML = results.map(biz => createBusinessCardHTML(biz, false)).join('');
+    }
+
+    // Interactive Simulated Map with Live Pins
+    function renderMapPins(results) {
+      const pinsContainer = document.getElementById('map-pins-container');
+      if (!pinsContainer) return;
+
+      if (results.length === 0) {
+        pinsContainer.innerHTML = `<div class="absolute inset-0 flex items-center justify-center text-xs text-slate-400 font-medium">No map pins to display</div>`;
+        return;
+      }
+
+      pinsContainer.innerHTML = results.map((biz, index) => {
+        // Compute pseudo coordinates on the responsive canvas
+        const topPercent = (biz.latOffset || ((index * 23 + 20) % 75));
+        const leftPercent = (biz.lngOffset || ((index * 37 + 15) % 80));
+
+        return `
+          <div 
+            style="top: ${topPercent}%; left: ${leftPercent}%;"
+            onmouseenter="showPinPreview('${biz.id}')"
+            onmouseleave="hidePinPreview()"
+            onclick="showView('details', '${biz.id}')"
+            class="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform hover:scale-125 z-20 group"
+          >
+            <div class="relative flex items-center justify-center">
+              ${biz.isFeatured ? `
+                <div class="absolute w-8 h-8 rounded-full bg-amber-400/40 animate-ping"></div>
+                <div class="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black flex items-center justify-center text-xs shadow-lg border-2 border-white">
+                  ★
+                </div>
+              ` : `
+                <div class="w-6 h-6 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center text-[10px] shadow-md border-2 border-white">
+                  📍
+                </div>
+              `}
+              <div class="absolute bottom-7 px-2 py-0.5 bg-slate-900 text-white rounded-md text-[9px] font-bold whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow">
+                ${biz.name}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showPinPreview(bizId) {
+      const previewBox = document.getElementById('map-pin-preview');
+      const biz = appState.businesses.find(b => b.id === bizId);
+      if (!biz || !previewBox) return;
+
+      previewBox.innerHTML = `
+        <div class="flex items-center gap-3">
+          <img src="${biz.coverImage}" class="w-12 h-12 rounded-xl object-cover" onerror="this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200'">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 text-[11px]">
+              <span class="font-bold text-amber-500">★ ${biz.rating.toFixed(1)}</span>
+              <span class="text-slate-400">(${biz.reviewsCount})</span>
+              <span class="text-teal-700 font-semibold">• ${biz.price}</span>
+            </div>
+            <h4 class="text-xs font-bold text-slate-900 truncate">${biz.name}</h4>
+            <p class="text-[10px] text-slate-400 truncate">${biz.neighborhood}, ${biz.city}</p>
+          </div>
+          <button onclick="showView('details', '${biz.id}')" class="px-2.5 py-1.5 rounded-lg bg-teal-600 text-white text-[10px] font-bold">
+            Details
+          </button>
+        </div>
+      `;
+      previewBox.classList.remove('hidden');
+    }
+
+    function hidePinPreview() {
+      const previewBox = document.getElementById('map-pin-preview');
+      if (previewBox) {
+        // Let it remain briefly or dismiss
+      }
+    }
+
+    function setExploreDisplayMode(mode) {
+      appState.exploreDisplayMode = mode;
+      const resCol = document.getElementById('results-column');
+      const mapCol = document.getElementById('map-column');
+      const btnSplit = document.getElementById('btn-view-split');
+      const btnGrid = document.getElementById('btn-view-grid');
+
+      if (mode === 'grid') {
+        resCol.className = 'lg:col-span-12 space-y-4';
+        mapCol.classList.add('hidden');
+        btnGrid.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm';
+        btnSplit.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+      } else {
+        resCol.className = 'lg:col-span-7 space-y-4';
+        mapCol.classList.remove('hidden');
+        btnSplit.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-sm';
+        btnGrid.className = 'px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition-all';
+      }
+    }
+
+    function toggleBooleanFilter(filterKey) {
+      appState.filter[filterKey] = !appState.filter[filterKey];
+      
+      const elMap = {
+        openNow: 'toggle-open-now',
+        verifiedOnly: 'toggle-verified',
+        featuredFirst: 'toggle-featured-first'
+      };
+
+      const btn = document.getElementById(elMap[filterKey]);
+      if (btn) {
+        if (appState.filter[filterKey]) {
+          btn.classList.add('bg-teal-50', 'border-teal-400', 'text-teal-900', 'font-bold');
+        } else {
+          btn.classList.remove('bg-teal-50', 'border-teal-400', 'text-teal-900', 'font-bold');
+        }
+      }
+      applyFilters();
+    }
+
+    function setPriceFilter(tier) {
+      appState.filter.price = tier;
+      ['all', '1', '2', '3'].forEach(k => {
+        const b = document.getElementById(`price-btn-${k}`);
+        if (b) {
+          b.className = 'px-2.5 py-1 rounded-md bg-white border border-slate-200 text-slate-700 font-bold text-xs';
+        }
+      });
+
+      const activeBtnMap = { 'ALL': 'price-btn-all', '₹': 'price-btn-1', '₹₹': 'price-btn-2', '₹₹₹': 'price-btn-3' };
+      const activeEl = document.getElementById(activeBtnMap[tier]);
+      if (activeEl) {
+        activeEl.className = 'px-2.5 py-1 rounded-md bg-slate-900 text-white font-bold text-xs';
+      }
+      applyFilters();
+    }
+
+    function resetAllFilters() {
+      appState.filter = {
+        query: '',
+        city: 'ALL',
+        category: 'ALL',
+        sort: 'rating',
+        price: 'ALL',
+        openNow: false,
+        verifiedOnly: false,
+        featuredFirst: true
+      };
+
+      const searchInput = document.getElementById('explore-search-input');
+      const citySelect = document.getElementById('filter-city');
+      const catSelect = document.getElementById('filter-category');
+      const sortSelect = document.getElementById('filter-sort');
+
+      if (searchInput) searchInput.value = '';
+      if (citySelect) citySelect.value = 'ALL';
+      if (catSelect) catSelect.value = 'ALL';
+      if (sortSelect) sortSelect.value = 'rating';
+
+      // Reset boolean styles
+      ['toggle-open-now', 'toggle-verified'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('bg-teal-50', 'border-teal-400', 'text-teal-900', 'font-bold');
+      });
+
+      setPriceFilter('ALL');
+      applyFilters();
+      showToast('Filters cleared');
+    }
+
+    function filterExploreBy(type) {
+      showView('explore');
+      resetAllFilters();
+      if (type === 'featured') {
+        appState.filter.featuredFirst = true;
+      } else if (type === 'top-rated') {
+        appState.filter.sort = 'rating';
+      }
+      applyFilters();
+    }
+
+    function filterExploreByCategory(catId) {
+      showView('explore');
+      resetAllFilters();
+      const catSelect = document.getElementById('filter-category');
+      if (catSelect) catSelect.value = catId;
+      appState.filter.category = catId;
+      applyFilters();
+    }
+
+    function filterExploreByLocation(cityName) {
+      showView('explore');
+      resetAllFilters();
+      const citySelect = document.getElementById('filter-city');
+      if (citySelect) citySelect.value = cityName;
+      appState.filter.city = cityName;
+      applyFilters();
+    }
+
+    function handleHeroSearch(e) {
+      e.preventDefault();
+      const query = document.getElementById('hero-query').value;
+      const location = document.getElementById('hero-location').value;
+
+      showView('explore');
+      const searchInput = document.getElementById('explore-search-input');
+      if (searchInput) {
+        searchInput.value = [query, location].filter(Boolean).join(' ');
+      }
+      applyFilters();
+    }
+
+    function quickSearchTag(tagName) {
+      showView('explore');
+      const searchInput = document.getElementById('explore-search-input');
+      if (searchInput) {
+        searchInput.value = tagName;
+      }
+      applyFilters();
+    }
+
+    // ==========================================
+    // 5. BUSINESS DETAILS VIEW
+    // ==========================================
+    function renderBusinessDetails(bizId) {
+      const container = document.getElementById('business-details-container');
+      const biz = appState.businesses.find(b => b.id === bizId) || appState.businesses[0];
+      if (!biz || !container) return;
+
+      const catObj = appState.categories.find(c => c.id === biz.category) || { name: biz.category, icon: '🏷️' };
+
+      // Related businesses
+      const relatedList = appState.businesses.filter(b => b.id !== biz.id && (b.category === biz.category || b.city === biz.city)).slice(0, 3);
+
+      container.innerHTML = `
+        <!-- TOP HERO COVER & LOGO -->
+        <div class="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-200">
+          <div class="h-64 sm:h-80 w-full overflow-hidden relative">
+            <img id="details-main-image" src="${biz.coverImage}" class="w-full h-full object-cover transition-all duration-300" onerror="this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200'">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+          </div>
+
+          <!-- Bottom bar over cover -->
+          <div class="absolute bottom-6 left-6 right-6 flex flex-col sm:flex-row sm:items-end justify-between gap-4 text-white">
+            <div>
+              <div class="flex flex-wrap items-center gap-2 mb-2">
+                <span class="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold text-white">
+                  ${catObj.icon} ${catObj.name}
+                </span>
+                ${biz.isFeatured ? `
+                  <span class="px-3 py-1 rounded-full bg-amber-500 text-slate-950 font-extrabold text-xs uppercase tracking-wider flex items-center gap-1 shadow badge-glow">
+                    ★ Featured Listing
+                  </span>
+                ` : ''}
+                ${biz.isVerified ? `
+                  <span class="px-3 py-1 rounded-full bg-teal-500 text-white font-bold text-xs flex items-center gap-1 shadow">
+                    ✓ Verified Pro
+                  </span>
+                ` : ''}
+              </div>
+              <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white drop-shadow">${biz.name}</h1>
+              <div class="flex items-center gap-3 mt-1.5 text-xs text-slate-300 font-medium">
+                <span class="flex items-center text-amber-400 font-bold">★ ${biz.rating.toFixed(1)}</span>
+                <span>•</span>
+                <span>${biz.reviewsCount} customer reviews</span>
+                <span>•</span>
+                <span>Price: <strong class="text-white">${biz.price}</strong></span>
+                <span>•</span>
+                <span>📍 ${biz.neighborhood}, ${biz.city}</span>
+              </div>
+            </div>
+
+            <!-- Action buttons atop hero -->
+            <div class="flex items-center gap-2">
+              <button onclick="promptContact('${biz.id}', 'call')" class="px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-lg transition-colors flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                Call Now
+              </button>
+              <button onclick="promptContact('${biz.id}', 'whatsapp')" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg transition-colors flex items-center gap-1.5">
+                <span>WhatsApp</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PHOTO THUMBNAIL GALLERY -->
+        ${biz.gallery && biz.gallery.length > 1 ? `
+          <div class="flex items-center gap-3 overflow-x-auto pb-2 pt-1">
+            ${biz.gallery.map(imgUrl => `
+              <img src="${imgUrl}" onclick="switchDetailsCoverImage('${imgUrl}')" class="w-24 h-16 rounded-xl object-cover cursor-pointer border-2 border-transparent hover:border-teal-500 transition-all shadow-xs" onerror="this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=200'">
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <!-- TWO COLUMN DETAILS LAYOUT -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <!-- Main Content (8 cols) -->
+          <div class="lg:col-span-8 space-y-8">
+            <!-- About Section -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+              <h2 class="text-lg font-bold text-slate-900 mb-3">About ${biz.name}</h2>
+              <p class="text-sm text-slate-600 leading-relaxed">${biz.description}</p>
+
+              <!-- Services list pills -->
+              <div class="mt-6 pt-6 border-t border-slate-100">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Services & Specialties Offered</h3>
+                <div class="flex flex-wrap gap-2">
+                  ${biz.services.map(s => `
+                    <span class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 text-xs font-semibold flex items-center gap-1.5">
+                      <span class="text-teal-600">✓</span> ${s}
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+
+            <!-- Customer Reviews Section -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-6">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 class="text-lg font-bold text-slate-900">Customer Ratings & Reviews</h2>
+                  <p class="text-xs text-slate-500">Real feedback from community members in ${biz.city}</p>
+                </div>
+                <button onclick="openReviewModal('${biz.id}', '${biz.name.replace(/'/g, "\\'")}')" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors">
+                  + Write a Review
+                </button>
+              </div>
+
+              <!-- Rating Aggregate Hero -->
+              <div class="flex items-center gap-6 p-4 rounded-2xl bg-amber-50/50 border border-amber-200">
+                <div class="text-center">
+                  <div class="text-4xl font-black text-slate-900">${biz.rating.toFixed(1)}</div>
+                  <div class="text-amber-500 text-lg mt-0.5">★★★★★</div>
+                  <div class="text-[11px] text-slate-400 mt-1">${biz.reviewsCount} verified ratings</div>
+                </div>
+                <div class="flex-1 space-y-1 text-xs">
+                  <div class="flex items-center gap-2">
+                    <span class="w-12 text-slate-500">5 star</span>
+                    <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-amber-500 rounded-full" style="width: 88%"></div>
+                    </div>
+                    <span class="w-8 text-right text-slate-400">88%</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-12 text-slate-500">4 star</span>
+                    <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-amber-500 rounded-full" style="width: 10%"></div>
+                    </div>
+                    <span class="w-8 text-right text-slate-400">10%</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="w-12 text-slate-500">3 star</span>
+                    <div class="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div class="h-full bg-amber-500 rounded-full" style="width: 2%"></div>
+                    </div>
+                    <span class="w-8 text-right text-slate-400">2%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Individual Review Cards -->
+              <div class="space-y-4 pt-2">
+                ${biz.reviews && biz.reviews.length > 0 ? biz.reviews.map(r => `
+                  <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                    <div class="flex items-center justify-between mb-2">
+                      <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center text-xs">
+                          ${r.author.charAt(0)}
+                        </div>
+                        <div>
+                          <h4 class="text-xs font-bold text-slate-900">${r.author}</h4>
+                          <span class="text-[10px] text-slate-400">${r.date || 'Recent'}</span>
+                        </div>
+                      </div>
+                      <div class="text-amber-500 text-xs font-bold">
+                        ${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}
+                      </div>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">${r.text}</p>
+                  </div>
+                `).join('') : `
+                  <p class="text-xs text-slate-400 text-center py-4">Be the first to review this business!</p>
+                `}
+              </div>
+            </div>
+          </div>
+
+          <!-- Sticky Sidebar Information (4 cols) -->
+          <div class="lg:col-span-4 space-y-6">
+            <!-- Contact Card -->
+            <div class="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm space-y-5">
+              <h3 class="text-sm font-bold text-slate-900">Direct Contact & Details</h3>
+
+              <div class="space-y-3 text-xs">
+                <div class="flex items-start gap-3">
+                  <span class="text-teal-600 text-base">📍</span>
+                  <div>
+                    <span class="font-bold text-slate-800">Physical Address</span>
+                    <p class="text-slate-500 mt-0.5">${biz.address}</p>
+                    <button onclick="showDirectionsPrompt('${biz.name}', '${biz.address}')" class="text-teal-600 font-bold hover:underline text-[11px] mt-1 block">Get Directions &rarr;</button>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3 pt-2 border-t border-slate-100">
+                  <span class="text-teal-600 text-base">⏰</span>
+                  <div>
+                    <span class="font-bold text-slate-800">Opening Status</span>
+                    <div class="mt-0.5 flex items-center gap-2">
+                      <span class="inline-block w-2 h-2 rounded-full ${biz.isOpenNow ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+                      <span class="font-bold ${biz.isOpenNow ? 'text-emerald-700' : 'text-slate-500'}">${biz.isOpenNow ? 'Open Now' : 'Closed Currently'}</span>
+                    </div>
+                    <p class="text-slate-400 text-[11px] mt-0.5">${biz.hours}</p>
+                  </div>
+                </div>
+
+                <div class="flex items-start gap-3 pt-2 border-t border-slate-100">
+                  <span class="text-teal-600 text-base">📞</span>
+                  <div>
+                    <span class="font-bold text-slate-800">Phone & WhatsApp</span>
+                    <p class="text-slate-600 mt-0.5 font-mono">${biz.phone}</p>
+                  </div>
+                </div>
+
+                ${biz.website ? `
+                  <div class="flex items-start gap-3 pt-2 border-t border-slate-100">
+                    <span class="text-teal-600 text-base">🌐</span>
+                    <div>
+                      <span class="font-bold text-slate-800">Official Website</span>
+                      <p class="text-teal-600 font-medium truncate max-w-[200px] mt-0.5 hover:underline cursor-pointer" onclick="showToast('Redirecting to partner site...')">${biz.website}</p>
+                    </div>
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- Quick Action Box -->
+              <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                <button onclick="promptContact('${biz.id}', 'call')" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow flex items-center justify-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                  <span>Contact Business</span>
+                </button>
+                <button onclick="promptContact('${biz.id}', 'whatsapp')" class="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
+                  <span>Chat on WhatsApp</span>
+                </button>
+                <button onclick="bookmarkBusiness('${biz.name}')" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition-all">
+                  🔖 Save to Favorites
+                </button>
+              </div>
+            </div>
+
+            <!-- Guarantee Box -->
+            <div class="bg-teal-50/70 border border-teal-200/80 rounded-3xl p-5 text-xs text-teal-900 space-y-1.5">
+              <div class="font-bold flex items-center gap-1.5 text-teal-950">
+                <span>🛡️</span> LocalFind Trust Guarantee
+              </div>
+              <p class="text-teal-800 leading-relaxed text-[11px]">
+                Business license and contact coordinates verified. We do not take transaction commissions—your interaction goes 100% directly to the pro.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- RELATED BUSINESSES ROW -->
+        ${relatedList.length > 0 ? `
+          <div class="pt-8 border-t border-slate-200">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Related Businesses in ${biz.city}</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              ${relatedList.map(r => createBusinessCardHTML(r, false)).join('')}
+            </div>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function switchDetailsCoverImage(url) {
+      const img = document.getElementById('details-main-image');
+      if (img) img.src = url;
+    }
+
+    // ==========================================
+    // 6. CATEGORIES VIEW
+    // ==========================================
+    function renderAllCategoriesFullGrid() {
+      const grid = document.getElementById('all-categories-full-grid');
+      if (!grid) return;
+
+      grid.innerHTML = appState.categories.map(cat => {
+        const count = appState.businesses.filter(b => b.category === cat.id).length;
+        return `
+          <div onclick="filterExploreByCategory('${cat.id}')" class="bg-white rounded-3xl border border-slate-200 p-6 hover:shadow-xl hover:border-teal-400 transition-all cursor-pointer group flex flex-col justify-between">
+            <div>
+              <div class="w-14 h-14 rounded-2xl ${cat.color} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform shadow-xs">
+                ${cat.icon}
+              </div>
+              <h3 class="text-base font-bold text-slate-900 group-hover:text-teal-700 transition-colors">${cat.name}</h3>
+              <p class="text-xs text-slate-400 mt-1">${count} verified active businesses</p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-teal-700">
+              <span>View Listings</span>
+              <span class="group-hover:translate-x-1 transition-transform">&rarr;</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // 7. LIST YOUR BUSINESS / REGISTRATION FLOW
+    // ==========================================
+    function selectListingPlan(planKey) {
+      appState.selectedRegPlan = planKey;
+
+      const cards = document.querySelectorAll('.pricing-card');
+      cards.forEach((card, idx) => {
+        const badges = card.querySelectorAll('.plan-selected-badge');
+        badges.forEach(b => b.classList.add('hidden'));
+      });
+
+      const planIndicator = document.getElementById('submit-plan-name-indicator');
+      if (planIndicator) {
+        if (planKey === 'FREE') planIndicator.textContent = 'FREE (₹0)';
+        if (planKey === 'FEATURED') planIndicator.textContent = `FEATURED (₹${appState.pricing.featured})`;
+        if (planKey === 'PREMIUM') planIndicator.textContent = `PREMIUM (₹${appState.pricing.premium})`;
+      }
+
+      updateLiveCardPreview();
+      showToast(`Selected ${planKey} Visibility Tier!`);
+    }
+
+    function populateRegistrationDropdowns() {
+      // Categories
+      const catSelect = document.getElementById('reg-category');
+      if (catSelect && catSelect.options.length === 0) {
+        appState.categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.id;
+          opt.textContent = `${cat.name}`;
+          catSelect.appendChild(opt);
+        });
+      }
+
+      // Cities
+      const citySelect = document.getElementById('reg-city');
+      if (citySelect && citySelect.options.length === 0) {
+        appState.locations.forEach(loc => {
+          const opt = document.createElement('option');
+          opt.value = loc.name;
+          opt.textContent = `${loc.name} (${loc.state})`;
+          citySelect.appendChild(opt);
+        });
+      }
+    }
+
+    function updateLiveCardPreview() {
+      const name = document.getElementById('reg-name')?.value || 'Your Business Name';
+      const catVal = document.getElementById('reg-category')?.value || 'cafes';
+      const catObj = appState.categories.find(c => c.id === catVal) || { name: 'Service', icon: '🏷️' };
+      const price = document.getElementById('reg-price')?.value || '₹₹';
+      const city = document.getElementById('reg-city')?.value || 'Visakhapatnam';
+      const neighborhood = document.getElementById('reg-neighborhood')?.value || 'Central Neighborhood';
+      const desc = document.getElementById('reg-desc')?.value || 'Short description of your services, specialty, and unique customer benefits.';
+      const img = document.getElementById('reg-image')?.value || 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600';
+      const isFeatured = (appState.selectedRegPlan === 'FEATURED' || appState.selectedRegPlan === 'PREMIUM');
+
+      const previewContainer = document.getElementById('live-preview-card');
+      if (!previewContainer) return;
+
+      previewContainer.innerHTML = `
+        <div class="relative h-36 rounded-xl overflow-hidden bg-slate-100">
+          <img src="${img}" class="w-full h-full object-cover" onerror="this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600'">
+          <div class="absolute top-2 left-2 flex gap-1">
+            ${isFeatured ? `<span class="bg-amber-500 text-slate-950 font-black text-[9px] px-2 py-0.5 rounded-full uppercase">★ Featured</span>` : ''}
+            <span class="bg-teal-600 text-white font-bold text-[9px] px-1.5 py-0.5 rounded-full">✓ Verified</span>
+          </div>
+          <div class="absolute bottom-2 right-2 bg-black/60 text-white font-bold text-[10px] px-2 py-0.5 rounded">
+            ${price}
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between text-[10px] text-teal-700 font-bold mb-0.5">
+            <span>${catObj.icon} ${catObj.name}</span>
+            <span class="text-slate-400">0.5 km away</span>
+          </div>
+          <h4 class="text-sm font-bold text-slate-900 line-clamp-1">${name}</h4>
+          <div class="flex items-center gap-1.5 text-[10px] mt-0.5">
+            <span class="text-amber-500 font-bold">★ 5.0 (New)</span>
+            <span class="text-slate-400">• 📍 ${neighborhood}, ${city}</span>
+          </div>
+          <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">${desc}</p>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+          <span class="text-emerald-600 font-bold">● Open Now</span>
+          <span class="text-slate-400 font-medium">Plan: ${appState.selectedRegPlan}</span>
+        </div>
+      `;
+    }
+
+    function handleBusinessRegistration(e) {
+      e.preventDefault();
+
+      const newBizId = 'biz-' + Date.now();
+      const isFeatured = (appState.selectedRegPlan === 'FEATURED' || appState.selectedRegPlan === 'PREMIUM');
+
+      const newBiz = {
+        id: newBizId,
+        name: document.getElementById('reg-name').value.trim(),
+        category: document.getElementById('reg-category').value,
+        city: document.getElementById('reg-city').value,
+        neighborhood: document.getElementById('reg-neighborhood').value.trim(),
+        address: document.getElementById('reg-address').value.trim(),
+        rating: 5.0,
+        reviewsCount: 1,
+        price: document.getElementById('reg-price').value,
+        distanceKm: 0.8,
+        isVerified: true,
+        isFeatured: isFeatured,
+        isOpenNow: true,
+        phone: document.getElementById('reg-phone').value.trim(),
+        whatsapp: document.getElementById('reg-whatsapp').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
+        website: document.getElementById('reg-website').value.trim(),
+        description: document.getElementById('reg-desc').value.trim(),
+        hours: document.getElementById('reg-hours').value.trim(),
+        coverImage: document.getElementById('reg-image').value.trim(),
+        gallery: [
+          document.getElementById('reg-image').value.trim(),
+          'https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600'
+        ],
+        services: document.getElementById('reg-services').value.split(',').map(s => s.trim()).filter(Boolean),
+        latOffset: Math.floor(Math.random() * 50) + 20,
+        lngOffset: Math.floor(Math.random() * 50) + 20,
+        reviews: [
+          {
+            id: 'r-init',
+            author: document.getElementById('reg-owner').value.trim(),
+            rating: 5,
+            date: 'Just now',
+            text: 'Official business registration verified on LocalFind.'
+          }
+        ]
+      };
+
+      // Add to store (at the beginning of list)
+      appState.businesses.unshift(newBiz);
+
+      // Increment category count
+      const cat = appState.categories.find(c => c.id === newBiz.category);
+      if (cat) cat.count += 1;
+
+      // Update location count
+      const loc = appState.locations.find(l => l.name === newBiz.city);
+      if (loc) loc.activeCount += 1;
+
+      showToast(`🎉 "${newBiz.name}" registered & published successfully!`);
+
+      // Reset form
+      document.getElementById('business-reg-form').reset();
+
+      // Navigate directly to the live details view
+      setTimeout(() => {
+        showView('details', newBiz.id);
+      }, 700);
+    }
+
+    // ==========================================
+    // 8. ADMIN DASHBOARD LOGIC
+    // ==========================================
+    function renderAdminDashboard() {
+      // 1. Calculate KPI Metrics
+      const totalBiz = appState.businesses.length;
+      const featuredCount = appState.businesses.filter(b => b.isFeatured).length;
+      const totalReviews = appState.businesses.reduce((acc, b) => acc + (b.reviews ? b.reviews.length : 0), 0);
+      const estMRR = (featuredCount * appState.pricing.featured);
+
+      document.getElementById('admin-kpi-businesses').textContent = totalBiz;
+      document.getElementById('admin-kpi-featured').textContent = featuredCount;
+      document.getElementById('admin-kpi-reviews').textContent = totalReviews;
+      document.getElementById('admin-kpi-mrr').textContent = '₹' + estMRR.toLocaleString();
+      document.getElementById('admin-tab-count').textContent = totalBiz;
+
+      // Set input values for pricing tab
+      const featInput = document.getElementById('admin-input-featured-price');
+      const premInput = document.getElementById('admin-input-premium-price');
+      if (featInput) featInput.value = appState.pricing.featured;
+      if (premInput) premInput.value = appState.pricing.premium;
+
+      renderAdminBusinessesTable();
+      renderAdminReviewsQueue();
+    }
+
+    function switchAdminTab(tabKey) {
+      appState.adminTab = tabKey;
+      ['businesses', 'pricing', 'reviews'].forEach(k => {
+        const btn = document.getElementById(`admin-tab-btn-${k}`);
+        const content = document.getElementById(`admin-tab-content-${k}`);
+        if (k === tabKey) {
+          btn.className = 'px-4 py-2 text-xs font-bold rounded-t-xl bg-white text-slate-900 border-t border-x border-slate-200 -mb-px';
+          content.classList.remove('hidden');
+        } else {
+          btn.className = 'px-4 py-2 text-xs font-bold rounded-t-xl text-slate-500 hover:text-slate-900';
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    function renderAdminBusinessesTable() {
+      const tbody = document.getElementById('admin-businesses-tbody');
+      const searchVal = document.getElementById('admin-table-search')?.value.toLowerCase().trim() || '';
+      if (!tbody) return;
+
+      let list = appState.businesses;
+      if (searchVal) {
+        list = list.filter(b => 
+          b.name.toLowerCase().includes(searchVal) ||
+          b.city.toLowerCase().includes(searchVal) ||
+          b.category.toLowerCase().includes(searchVal)
+        );
+      }
+
+      tbody.innerHTML = list.map(biz => `
+        <tr class="hover:bg-slate-50/80 transition-colors">
+          <td class="p-3 font-bold text-slate-900">
+            <div class="flex items-center gap-2.5">
+              <img src="${biz.coverImage}" class="w-8 h-8 rounded-lg object-cover" onerror="this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=100'">
+              <div>
+                <a href="#" onclick="showView('details', '${biz.id}'); return false;" class="hover:text-teal-700">${biz.name}</a>
+                <div class="text-[10px] text-slate-400 font-normal">${biz.neighborhood}</div>
+              </div>
+            </div>
+          </td>
+          <td class="p-3 capitalize">${biz.category}</td>
+          <td class="p-3">${biz.city}</td>
+          <td class="p-3 text-amber-600 font-bold">★ ${biz.rating.toFixed(1)}</td>
+          <td class="p-3">
+            <button onclick="toggleAdminVerified('${biz.id}')" class="px-2.5 py-1 rounded-full text-[10px] font-bold ${biz.isVerified ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-slate-100 text-slate-400'}">
+              ${biz.isVerified ? '✓ Verified' : 'Unverified'}
+            </button>
+          </td>
+          <td class="p-3">
+            <button onclick="toggleAdminFeatured('${biz.id}')" class="px-2.5 py-1 rounded-full text-[10px] font-bold ${biz.isFeatured ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-400'}">
+              ${biz.isFeatured ? '★ Featured' : 'Standard'}
+            </button>
+          </td>
+          <td class="p-3 text-right space-x-1">
+            <button onclick="showView('details', '${biz.id}')" class="px-2 py-1 text-slate-700 hover:text-teal-700 font-semibold text-[11px]">View</button>
+            <button onclick="deleteBusinessByAdmin('${biz.id}')" class="px-2 py-1 text-rose-600 hover:text-rose-700 font-semibold text-[11px]">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function toggleAdminVerified(id) {
+      const biz = appState.businesses.find(b => b.id === id);
+      if (!biz) return;
+      biz.isVerified = !biz.isVerified;
+      renderAdminDashboard();
+      showToast(`Verification status updated for ${biz.name}`);
+    }
+
+    function toggleAdminFeatured(id) {
+      const biz = appState.businesses.find(b => b.id === id);
+      if (!biz) return;
+      biz.isFeatured = !biz.isFeatured;
+      renderAdminDashboard();
+      showToast(`Featured status set to ${biz.isFeatured ? 'ACTIVE' : 'INACTIVE'} for ${biz.name}`);
+    }
+
+    function deleteBusinessByAdmin(id) {
+      const idx = appState.businesses.findIndex(b => b.id === id);
+      if (idx === -1) return;
+      const name = appState.businesses[idx].name;
+      appState.businesses.splice(idx, 1);
+      renderAdminDashboard();
+      showToast(`Removed "${name}" from directory`);
+    }
+
+    function handleAdminUpdatePricing(e) {
+      e.preventDefault();
+      const featPrice = parseInt(document.getElementById('admin-input-featured-price').value, 10);
+      const premPrice = parseInt(document.getElementById('admin-input-premium-price').value, 10);
+
+      appState.pricing.featured = featPrice;
+      appState.pricing.premium = premPrice;
+
+      updatePricingBadgesAcrossUI();
+      renderAdminDashboard();
+      showToast('Pricing plans updated successfully across the platform!');
+    }
+
+    function updatePricingBadgesAcrossUI() {
+      const featuredBadge = document.getElementById('cta-featured-price-text');
+      const planFeat = document.getElementById('plan-featured-price');
+      const planPrem = document.getElementById('plan-premium-price');
+
+      if (featuredBadge) featuredBadge.textContent = `₹${appState.pricing.featured}/month`;
+      if (planFeat) planFeat.textContent = `₹${appState.pricing.featured}`;
+      if (planPrem) planPrem.textContent = `₹${appState.pricing.premium}`;
+    }
+
+    function renderAdminReviewsQueue() {
+      const container = document.getElementById('admin-reviews-list');
+      if (!container) return;
+
+      const allReviews = [];
+      appState.businesses.forEach(b => {
+        if (b.reviews) {
+          b.reviews.forEach(r => {
+            allReviews.push({ ...r, businessId: b.id, businessName: b.name });
+          });
+        }
+      });
+
+      if (allReviews.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-400 py-4 text-center">No reviews in the database.</div>`;
+        return;
+      }
+
+      container.innerHTML = allReviews.map(r => `
+        <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200 flex items-center justify-between gap-4 text-xs">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-900">${r.author}</span>
+              <span class="text-amber-500 font-bold">★ ${r.rating}</span>
+              <span class="text-slate-400">&bull; on ${r.businessName}</span>
+            </div>
+            <p class="text-slate-600 mt-1">${r.text}</p>
+          </div>
+          <button onclick="removeReviewByAdmin('${r.businessId}', '${r.id}')" class="text-rose-600 hover:text-rose-800 font-bold text-[11px] whitespace-nowrap px-2 py-1 rounded bg-rose-50 hover:bg-rose-100">
+            Remove
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function removeReviewByAdmin(bizId, reviewId) {
+      const biz = appState.businesses.find(b => b.id === bizId);
+      if (!biz || !biz.reviews) return;
+      biz.reviews = biz.reviews.filter(r => r.id !== reviewId);
+      renderAdminDashboard();
+      showToast('Review removed from public listing');
+    }
+
+    function resetDataToDemoDefaults() {
+      appState.businesses = JSON.parse(JSON.stringify(SEED_BUSINESSES));
+      appState.categories = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      appState.locations = JSON.parse(JSON.stringify(DEFAULT_LOCATIONS));
+      appState.pricing = { featured: 499, premium: 999 };
+      renderAdminDashboard();
+      showToast('Demo data restored to defaults!');
+    }
+
+    // ==========================================
+    // 9. MODALS, TOASTS & CONTACT ACTIONS
+    // ==========================================
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+
+      const toast = document.createElement('div');
+      toast.className = 'bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-2.5 transform transition-all duration-300 translate-y-4 opacity-0 pointer-events-auto';
+      toast.innerHTML = `
+        <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+      }, 10);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // Contact Action Prompt
+    function promptContact(bizId, mode) {
+      const biz = appState.businesses.find(b => b.id === bizId);
+      if (!biz) return;
+
+      const modal = document.getElementById('contact-modal');
+      const title = document.getElementById('contact-modal-title');
+      const desc = document.getElementById('contact-modal-desc');
+      const val = document.getElementById('contact-modal-value');
+      const icon = document.getElementById('contact-modal-icon');
+      const actionBtn = document.getElementById('contact-modal-action-btn');
+
+      if (mode === 'call') {
+        title.textContent = `Call ${biz.name}`;
+        desc.textContent = 'Direct verified line with zero broker fees';
+        val.textContent = biz.phone;
+        icon.textContent = '📞';
+        actionBtn.textContent = 'Place Call';
+        activeContactActionData = { type: 'tel', value: biz.phone };
+      } else {
+        title.textContent = `WhatsApp Chat with ${biz.name}`;
+        desc.textContent = 'Send direct message or inquiry regarding rates';
+        val.textContent = biz.whatsapp;
+        icon.textContent = '💬';
+        actionBtn.textContent = 'Start WhatsApp';
+        activeContactActionData = { type: 'wa', value: biz.whatsapp };
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function executeContactAction() {
+      if (!activeContactActionData) return;
+      if (activeContactActionData.type === 'tel') {
+        window.location.href = `tel:${activeContactActionData.value.replace(/[^0-9+]/g, '')}`;
+        showToast('Connecting telephone call...');
+      } else {
+        const cleanNumber = activeContactActionData.value.replace(/[^0-9]/g, '');
+        window.open(`https://wa.me/${cleanNumber}?text=Hi!%20I%20found%20your%20listing%20on%20LocalFind.%20I%20would%20like%20to%20inquire%20about%20your%20services.`, '_blank');
+        showToast('Opening WhatsApp messenger...');
+      }
+      closeContactModal();
+    }
+
+    function copyContactToClipboard() {
+      if (!activeContactActionData) return;
+      const text = activeContactActionData.value;
+      const dummy = document.createElement('input');
+      document.body.appendChild(dummy);
+      dummy.value = text;
+      dummy.select();
+      document.execCommand('copy');
+      document.body.removeChild(dummy);
+      showToast(`Copied ${text} to clipboard!`);
+      closeContactModal();
+    }
+
+    function closeContactModal() {
+      document.getElementById('contact-modal').classList.add('hidden');
+      activeContactActionData = null;
+    }
+
+    function showDirectionsPrompt(bizName, addr) {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(bizName + ' ' + addr)}`, '_blank');
+      showToast(`Opening turn-by-turn map directions for ${bizName}...`);
+    }
+
+    function bookmarkBusiness(name) {
+      showToast(`Saved "${name}" to your LocalFind bookmarks!`);
+    }
+
+    // Review Modal Handlers
+    function openReviewModal(bizId, bizName) {
+      document.getElementById('review-business-id').value = bizId;
+      document.getElementById('review-modal-biz-name').textContent = bizName;
+      setModalStarRating(5);
+      document.getElementById('review-modal').classList.remove('hidden');
+    }
+
+    function closeReviewModal() {
+      document.getElementById('review-modal').classList.add('hidden');
+    }
+
+    function setModalStarRating(stars) {
+      document.getElementById('review-stars-val').value = stars;
+      const buttons = document.querySelectorAll('.star-btn');
+      buttons.forEach((btn, index) => {
+        if (index < stars) {
+          btn.className = 'star-btn text-2xl text-amber-400';
+        } else {
+          btn.className = 'star-btn text-2xl text-slate-200 hover:text-amber-400';
+        }
+      });
+    }
+
+    function handleReviewSubmit(e) {
+      e.preventDefault();
+      const bizId = document.getElementById('review-business-id').value;
+      const author = document.getElementById('review-author').value.trim();
+      const stars = parseInt(document.getElementById('review-stars-val').value, 10);
+      const text = document.getElementById('review-comment').value.trim();
+
+      const biz = appState.businesses.find(b => b.id === bizId);
+      if (!biz) return;
+
+      if (!biz.reviews) biz.reviews = [];
+      biz.reviews.unshift({
+        id: 'r-' + Date.now(),
+        author: author,
+        rating: stars,
+        date: 'Just now',
+        text: text
+      });
+
+      // Recalculate average rating
+      const sum = biz.reviews.reduce((acc, cur) => acc + cur.rating, 0);
+      biz.rating = sum / biz.reviews.length;
+      biz.reviewsCount += 1;
+
+      closeReviewModal();
+      showToast('Thank you! Your verified review has been published.');
+      renderBusinessDetails(bizId);
+    }
+
+    // Auth Simulation
+    function openAuthModal(mode = 'login') {
+      setAuthTab(mode);
+      document.getElementById('auth-modal').classList.remove('hidden');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('auth-modal').classList.add('hidden');
+    }
+
+    function setAuthTab(tab) {
+      const loginTab = document.getElementById('auth-tab-login');
+      const signupTab = document.getElementById('auth-tab-signup');
+      const signupFields = document.getElementById('auth-signup-fields');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const title = document.getElementById('auth-modal-title');
+
+      if (tab === 'login') {
+        loginTab.className = 'flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm';
+        signupTab.className = 'flex-1 py-1.5 text-xs font-bold text-slate-600';
+        signupFields.classList.add('hidden');
+        submitBtn.textContent = 'Log In to LocalFind';
+        title.textContent = 'Welcome back to LocalFind';
+      } else {
+        signupTab.className = 'flex-1 py-1.5 text-xs font-bold rounded-lg bg-white text-slate-900 shadow-sm';
+        loginTab.className = 'flex-1 py-1.5 text-xs font-bold text-slate-600';
+        signupFields.classList.remove('hidden');
+        submitBtn.textContent = 'Create Free Account';
+        title.textContent = 'Create your LocalFind Account';
+      }
+    }
+
+    function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('auth-email').value;
+      const name = document.getElementById('auth-name')?.value || email.split('@')[0];
+
+      appState.currentUser = { email, name };
+      document.getElementById('login-btn-top').classList.add('hidden');
+      document.getElementById('signup-btn-top').classList.add('hidden');
+
+      const userBar = document.getElementById('logged-user-bar');
+      userBar.classList.remove('hidden');
+      userBar.classList.add('flex');
+      document.getElementById('user-avatar-initials').textContent = name.substring(0, 2).toUpperCase();
+
+      closeAuthModal();
+      showToast(`Welcome, ${name}! Signed in successfully.`);
+    }
+
+    function logoutUser() {
+      appState.currentUser = null;
+      document.getElementById('login-btn-top').classList.remove('hidden');
+      document.getElementById('signup-btn-top').classList.remove('hidden');
+      document.getElementById('logged-user-bar').classList.add('hidden');
+      document.getElementById('logged-user-bar').classList.remove('flex');
+      showToast('You have been logged out.');
+    }
+
+    function showPricingPlansModal() {
+      showView('list-business');
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    }
+
+    function openSchemaModal() {
+      document.getElementById('schema-modal').classList.remove('hidden');
+    }
+
+    function closeSchemaModal() {
+      document.getElementById('schema-modal').classList.add('hidden');
+    }
+
+    // Top Location Dropdown
+    function toggleLocationDropdown() {
+      const drop = document.getElementById('location-dropdown');
+      drop.classList.toggle('hidden');
+    }
+
+    function populateLocationDropdown() {
+      const list = document.getElementById('location-options-list');
+      const mobileSelect = document.getElementById('mobile-location-select');
+      if (!list) return;
+
+      list.innerHTML = appState.locations.map(loc => `
+        <button onclick="changeCurrentLocation('${loc.name}')" class="w-full text-left px-3 py-2 text-xs rounded-xl hover:bg-slate-100 flex items-center justify-between transition-colors">
+          <span class="font-semibold text-slate-800">${loc.name}</span>
+          <span class="text-[10px] text-slate-400 font-mono">${loc.state}</span>
+        </button>
+      `).join('');
+
+      if (mobileSelect) {
+        mobileSelect.innerHTML = appState.locations.map(loc => `
+          <option value="${loc.name}">${loc.name}</option>
+        `).join('');
+      }
+    }
+
+    function changeCurrentLocation(cityName) {
+      appState.currentCity = cityName;
+      document.getElementById('nav-current-location').textContent = cityName;
+      const mobileSelect = document.getElementById('mobile-location-select');
+      if (mobileSelect) mobileSelect.value = cityName;
+      document.getElementById('location-dropdown').classList.add('hidden');
+      showToast(`Location set to ${cityName}`);
+      filterExploreByLocation(cityName);
+    }
+
+    function toggleMobileMenu() {
+      document.getElementById('mobile-menu').classList.toggle('hidden');
+    }
+
+    // Close location dropdown when clicked outside
+    window.addEventListener('click', (e) => {
+      const locBtn = document.getElementById('nav-location-btn');
+      const dropdown = document.getElementById('location-dropdown');
+      if (locBtn && dropdown && !locBtn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // ==========================================
+    // 10. APP LIFECYCLE BOOTSTRAP
+    // ==========================================
+    window.onload = function() {
+      populateLocationDropdown();
+      showView('home');
+      showToast('Welcome to LocalFind! Discover trusted local services.');
+    };
+  </script>
+</body>
+</html>
